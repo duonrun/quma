@@ -33,7 +33,7 @@
 		"duon/cli": "dev-main"
 	},
 	"require-dev": {
-		"duon/dev": "^1.1",
+		"duon/dev": "dev-main",
 		"phpunit/phpunit": "^11.5",
 		"vimeo/psalm": "^6.10",
 		"dealerdirect/phpcodesniffer-composer-installer": "^1",
