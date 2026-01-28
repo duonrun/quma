@@ -2,10 +2,10 @@ Quma
 ====
 
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE.md)
-[![Coverage Status](https://img.shields.io/scrutinizer/coverage/g/duoncode/quma.svg)](https://scrutinizer-ci.com/g/duoncode/quma/code-structure)
-[![Psalm coverage](https://shepherd.dev/github/duoncode/quma/coverage.svg?)](https://shepherd.dev/github/duoncode/quma)
-[![Psalm level](https://shepherd.dev/github/duoncode/quma/level.svg?)](https://duoncode.dev/quma)
-[![Quality Score](https://img.shields.io/scrutinizer/g/duoncode/quma.svg)](https://scrutinizer-ci.com/g/duoncode/quma)
+[![Coverage Status](https://img.shields.io/scrutinizer/coverage/g/duonrun/quma.svg)](https://scrutinizer-ci.com/g/duonrun/quma/code-structure)
+[![Psalm coverage](https://shepherd.dev/github/duonrun/quma/coverage.svg?)](https://shepherd.dev/github/duonrun/quma)
+[![Psalm level](https://shepherd.dev/github/duonrun/quma/level.svg?)](https://duonrun.dev/quma)
+[![Quality Score](https://img.shields.io/scrutinizer/g/duonrun/quma.svg)](https://scrutinizer-ci.com/g/duonrun/quma)
 
 Quma is a PHP port of the similary named Python library [quma](https://quma.readthedocs.io).
 
@@ -23,3 +23,7 @@ Quma is a PHP port of the similary named Python library [quma](https://quma.read
     CREATE USER quma_user PASSWORD 'quma_password';
     GRANT ALL PRIVILEGES ON DATABASE quma_db TO quma_user;
     ALTER DATABASE quma_db OWNER TO quma_user;
+
+## License
+
+This project is licensed under the [MIT license](LICENSE.md).
