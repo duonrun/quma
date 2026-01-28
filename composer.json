@@ -30,6 +30,9 @@
 	"prefer-stable": true,
 	"require": {
 		"php": "^8.5",
+		"ext-json": "*",
+		"ext-readline": "*",
+		"ext-pdo": "*",
 		"duon/cli": "^0.1"
 	},
 	"require-dev": {
