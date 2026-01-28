@@ -5,6 +5,7 @@
 .markdownlint.jsonc
 .php*.cache
 __pycache__
+clover.xml
 composer.lock
 tests/migratons/2*
 /coverage
