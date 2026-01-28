@@ -48,10 +48,10 @@ class TestMigration_1 implements MigrationInterface
 				break;
 			case 'pgsql':
 				$result = $db->execute(
-					'SELECT count(*) AS exists FROM information_schema.columns ' .
-						"WHERE table_schema='public' " .
-						"AND table_name='genres' " .
-						"AND column_name='name_pgsql'",
+					'SELECT count(*) AS exists FROM information_schema.columns '
+						. "WHERE table_schema='public' "
+						. "AND table_name='genres' "
+						. "AND column_name='name_pgsql'",
 				)->one();
 
 				assert($result['exists'] === 1);

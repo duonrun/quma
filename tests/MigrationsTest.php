@@ -34,7 +34,6 @@ class MigrationsTest extends TestCase
 		TestCase::cleanupTestDbs();
 	}
 
-
 	public function testCreateMigrationsTableSuccess(): void
 	{
 		$_SERVER['argv'] = ['run', 'migrations', '--apply'];

@@ -46,8 +46,8 @@ class TestCase extends BaseTestCase
 	{
 		$prefix = self::root() . '/sql/';
 
-		return $additionalDirs ?
-			[
+		return $additionalDirs
+			? [
 				$prefix . 'default',
 				[
 					'sqlite' => $prefix . 'additional',

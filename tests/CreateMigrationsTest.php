@@ -32,7 +32,6 @@ class CreateMigrationsTest extends TestCase
 		TestCase::cleanupTestDbs();
 	}
 
-
 	#[DataProvider('connectionProvider')]
 	public function testCreateMigrationsTableSuccess(string $dsn): void
 	{
