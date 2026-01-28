@@ -87,9 +87,9 @@ class Migrations extends Command
 			if (!array_key_exists('default', $migrationNamespaces)) {
 				$this->error("Migration namespace 'default' does not exist");
 				$this->info(
-					"If you have defined namespaced migrations, you must either provide a namespace using the " .
-					"`--namespace` flag when running this command, or define a namespace named 'default' which " .
-					"will be used when no namespace is provided.",
+					"If you have defined namespaced migrations, you must either provide a namespace using the "
+					. "`--namespace` flag when running this command, or define a namespace named 'default' which "
+					. "will be used when no namespace is provided.",
 				);
 
 				return 1;
@@ -362,20 +362,20 @@ class Migrations extends Command
 
 	protected function showEmptyMessage(string $migration): void
 	{
-		echo "\033[33mWarning\033[0m: Migration '\033[1;33m" .
-			basename($migration) .
-			"'\033[0m is empty. Skipped\n";
+		echo "\033[33mWarning\033[0m: Migration '\033[1;33m"
+			. basename($migration)
+			. "'\033[0m is empty. Skipped\n";
 	}
 
 	protected function showMessage(
 		string $migration,
-		Throwable|null $e = null,
+		?Throwable $e = null,
 		bool $showStacktrace = false,
 	): void {
 		if ($e) {
-			echo "\033[1;31mError\033[0m: while working on migration '\033[1;33m" .
-				basename($migration) .
-				"\033[0m'\n";
+			echo "\033[1;31mError\033[0m: while working on migration '\033[1;33m"
+				. basename($migration)
+				. "\033[0m'\n";
 			echo $e->getMessage() . "\n";
 
 			if ($showStacktrace) {
@@ -385,8 +385,8 @@ class Migrations extends Command
 			return;
 		}
 
-		echo "\033[1;32mSuccess\033[0m: Migration '\033[1;33m" .
-			basename($migration) .
-			"\033[0m' successfully applied\n";
+		echo "\033[1;32mSuccess\033[0m: Migration '\033[1;33m"
+			. basename($migration)
+			. "\033[0m' successfully applied\n";
 	}
 }

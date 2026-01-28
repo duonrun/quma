@@ -36,9 +36,9 @@ class Folder
 
 		foreach ($this->db->getSqlDirs() as $path) {
 			assert(is_string($path));
-			$result = $path . DIRECTORY_SEPARATOR .
-				$this->folder . DIRECTORY_SEPARATOR .
-				$key . $ext;
+			$result = $path . DIRECTORY_SEPARATOR
+				. $this->folder . DIRECTORY_SEPARATOR
+				. $key . $ext;
 
 			if (is_file($result)) {
 				return $result;
