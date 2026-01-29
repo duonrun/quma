@@ -7,7 +7,7 @@ Quma
 [![Psalm level](https://shepherd.dev/github/duonrun/quma/level.svg?)](https://duonrun.dev/quma)
 [![Quality Score](https://img.shields.io/scrutinizer/g/duonrun/quma.svg)](https://scrutinizer-ci.com/g/duonrun/quma)
 
-Quma is a PHP port of the similary named Python library [quma](https://quma.readthedocs.io).
+This project is a PHP port of Python library [quma](https://quma.readthedocs.io).
 
 ## Test Databases
 
