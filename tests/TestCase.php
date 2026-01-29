@@ -29,9 +29,9 @@ class TestCase extends BaseTestCase
 	}
 
 	public function connection(
-		string $dsn = null,
+		?string $dsn = null,
 		bool $additionalDirs = false,
-		array|string $migrations = null,
+		array|string|null $migrations = null,
 	): Connection {
 		$dsn = $dsn ?: $this->getDsn();
 		$sql = $this->getSqlDirs($additionalDirs);
@@ -203,8 +203,8 @@ class TestCase extends BaseTestCase
 	}
 
 	protected function commands(
-		string $dsn = null,
-		array|string $migrations = null,
+		?string $dsn = null,
+		array|string|null $migrations = null,
 		bool $multipleConnections = false,
 		string $firstMultipleConnectionsKey = 'default',
 	): Commands {
