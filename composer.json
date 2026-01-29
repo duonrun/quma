@@ -3,6 +3,8 @@
 	"description": "A no-ORM database library for executing raw SQL files",
 	"type": "library",
 	"license": "MIT",
+	"minimum-stability": "dev",
+	"prefer-stable": true,
 	"authors": [
 		{
 			"name": "Ernst",
@@ -26,8 +28,6 @@
 			"Duon\\Quma\\Tests\\": "tests"
 		}
 	},
-	"minimum-stability": "dev",
-	"prefer-stable": true,
 	"require": {
 		"php": "^8.5",
 		"ext-json": "*",
@@ -36,34 +36,22 @@
 		"duon/cli": "^0.1"
 	},
 	"require-dev": {
-		"ernst/coverlyzer": "^0.2",
-		"duon/dev": "^2.3",
-		"phpunit/phpunit": "^12.0",
-		"vimeo/psalm": "6.x-dev"
+		"duon/dev": "^2.4"
 	},
 	"scripts": {
 		"test": [
 			"./vendor/bin/phpunit --testdox --no-coverage --colors=always"
 		],
 		"check": "./vendor/bin/psalm --no-cache",
-		"check-github": "./vendor/bin/psalm --output-format=github --shepherd",
 		"mdlint": "markdownlint-cli2 README.md CHANGELOG.md LICENSE.md docs/",
 		"coverage": [
-			"php -d xdebug.mode=coverage ./vendor/bin/phpunit --testdox --path-coverage --coverage-clover=clover.xml --coverage-text --coverage-php=coverage/cover.php --colors=always",
-			"./vendor/bin/coverlyzer coverage/cover.php"
-		],
-		"coverage-ci": [
-			"php -d pcov.enabled=1 ./vendor/bin/phpunit --testdox --coverage-clover=clover.xml --coverage-text --coverage-php=coverage/cover.php --colors=always",
+			"php -d xdebug.mode=coverage ./vendor/bin/phpunit --testdox --path-coverage --coverage-text --coverage-php=coverage/cover.php --colors=always",
 			"./vendor/bin/coverlyzer coverage/cover.php"
 		],
 		"ci": [
 			"composer coverage",
 			"composer check",
 			"composer mdlint"
-		],
-		"github": [
-			"composer coverage-ci",
-			"composer check-github"
 		],
 		"benchmark": "php bench/run.php",
 		"post-install-cmd": [

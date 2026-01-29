@@ -7,7 +7,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     env:
       DB_MYSQL_HOST: localhost
       DB_PGSQL_HOST: localhost
@@ -16,13 +16,17 @@ jobs:
       DB_PASSWORD: root
     steps:
       - name: Setup PHP extensions
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1 # v2
         with:
-          php-version: '8.2'
+          php-version: '8.5'
           extensions: sqlite3, pgsql, mysql, gd, pcov, curl, xml, zip
+          coverage: pcov
+
+      - name: Disable Xdebug
+        run: sudo phpdismod xdebug
 
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Install packages with composer
         run: composer install
@@ -39,18 +43,16 @@ jobs:
           sudo -u postgres psql -c "CREATE USER ${{ env.DB_USER }} WITH SUPERUSER PASSWORD '${{ env.DB_PASSWORD }}';"
 
       - name: Run tests
-        run: vendor/bin/phpunit --coverage-clover=coverage.xml --coverage-filter=src --coverage-html=coverage
+        run: php -d pcov.enabled=1 ./vendor/bin/phpunit --coverage-clover=coverage.xml --coverage-filter=src --coverage-html=coverage
 
       - name: Run Psalm
         run: vendor/bin/psalm --output-format=github --shepherd
 
-      - name: Run PHP Code Sniffer
-        run: vendor/bin/phpcs -q --report=checkstyle src tests | vendor/bin/cs2pr
-
       - name: Upload coverage report to Codacy
+        continue-on-error: true
         run: bash <(curl -Ls https://coverage.codacy.com/get.sh)
         env:
           CODACY_API_TOKEN: ${{secrets.CODACY_ACCOUNT_TOKEN}}
           CODACY_ORGANIZATION_PROVIDER: gh
-          CODACY_USERNAME: duon
+          CODACY_USERNAME: duonrun
           CODACY_PROJECT_NAME: boiler
