@@ -10,3 +10,7 @@ tests/migratons/2*
 /site
 /tmp
 /vendor
+
+# Local config overrides (not committed)
+/phpunit.xml
+/psalm.xml
