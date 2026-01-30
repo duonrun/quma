@@ -52,7 +52,7 @@ class Folder
 	{
 		$script = $this->scriptPath($key, false);
 
-		if ($script && is_string($script)) {
+		if (is_string($script)) {
 			return file_get_contents($script);
 		}
 
@@ -63,7 +63,7 @@ class Folder
 	{
 		$stmt = $this->readScript($key);
 
-		if ($stmt) {
+		if ($stmt !== false) {
 			return new Script($this->db, $stmt, false);
 		}
 
@@ -71,7 +71,7 @@ class Folder
 		// assume the script is a dnyamic sql template
 		$dynStmt = $this->scriptPath($key, true);
 
-		if ($dynStmt && is_string($dynStmt)) {
+		if (is_string($dynStmt)) {
 			return new Script($this->db, $dynStmt, true);
 		}
 

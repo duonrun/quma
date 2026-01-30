@@ -129,7 +129,7 @@ class Connection
 	{
 		$result = realpath($path);
 
-		if ($result) {
+		if ($result !== false) {
 			return $result;
 		}
 

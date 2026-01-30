@@ -26,7 +26,7 @@ final class CreateMigrationsTable extends Command
 		}
 		$ddl = $env->getMigrationsTableDDL();
 
-		if ($ddl) {
+		if ($ddl !== false) {
 			try {
 				$env->db->execute($ddl)->run();
 				echo "\033[1;32mSuccess\033[0m: Created table '{$env->table}'\n";

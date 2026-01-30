@@ -43,7 +43,7 @@ class Query
 				. $this->interpolate()
 				. "\n------------------------------------------------\n";
 
-			if ($_SERVER['SERVER_SOFTWARE'] ?? false) {
+			if (isset($_SERVER['SERVER_SOFTWARE']) && $_SERVER['SERVER_SOFTWARE'] !== '') {
 				// @codeCoverageIgnoreStart
 				error_log($msg);
 				// @codeCoverageIgnoreEnd

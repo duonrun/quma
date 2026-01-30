@@ -92,14 +92,14 @@ class Script
 		// Match everything starting with : and a letter.
 		// Exclude multiple colons, like type casts (::text).
 		// Would not find a var if it is at the very beginning of script.
-		if (
-			preg_match_all(
-				'/[^:]:[a-zA-Z][a-zA-Z0-9_]*/',
-				$script,
-				$result,
-				PREG_PATTERN_ORDER,
-			)
-		) {
+		$matches = preg_match_all(
+			'/[^:]:[a-zA-Z][a-zA-Z0-9_]*/',
+			$script,
+			$result,
+			PREG_PATTERN_ORDER,
+		);
+
+		if ($matches !== false && $matches > 0) {
 			$argsArray = $args->get();
 			$newArgs = [];
 
