@@ -1,8 +1,6 @@
 *.log
 .cache
 .env
-.editorconfig
-.markdownlint.jsonc
 .php*.cache
 __pycache__
 clover.xml
