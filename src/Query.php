@@ -43,7 +43,7 @@ class Query
 				. $this->interpolate()
 				. "\n------------------------------------------------\n";
 
-			if (isset($_SERVER['SERVER_SOFTWARE']) && $_SERVER['SERVER_SOFTWARE'] !== '') {
+			if (isset($_SERVER['SERVER_SOFTWARE'])) {
 				// @codeCoverageIgnoreStart
 				error_log($msg);
 				// @codeCoverageIgnoreEnd
@@ -193,7 +193,9 @@ class Query
 		}
 
 		if (is_array($value)) {
-			return "'" . json_encode($value) . "'";
+			$encoded = json_encode($value);
+
+			return "'" . ($encoded !== false ? $encoded : '[]') . "'";
 		}
 
 		if (is_null($value)) {
@@ -227,7 +229,7 @@ class Query
 			foreach ($patterns as $pattern) {
 				$matches = [];
 
-				if (preg_match($pattern, $query, $matches)) {
+				if ($query !== null && preg_match($pattern, $query, $matches)) {
 					$match = $matches[0];
 					$replacement = "___CHUCK_REPLACE_{$i}___";
 					assert(!empty($match));
@@ -242,7 +244,7 @@ class Query
 			}
 		} while ($found);
 
-		return new PreparedQuery($query, $swaps);
+		return new PreparedQuery($query ?? '', $swaps);
 	}
 
 	protected function restoreQuery(string $query, PreparedQuery $prep): string
@@ -270,11 +272,13 @@ class Query
 
 	protected function interpolatePositional(string $query, array $args): string
 	{
+		$result = $query;
 		/** @psalm-suppress MixedAssignment -- $value is checked in convertValue */
 		foreach ($args as $value) {
-			$query = preg_replace('/\\?/', $this->convertValue($value), $query, 1);
+			$replaced = preg_replace('/\\?/', $this->convertValue($value), $result, 1);
+			$result = $replaced ?? $result;
 		}
 
-		return $query;
+		return $result;
 	}
 }

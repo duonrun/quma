@@ -12,18 +12,17 @@ use ValueError;
 /**
  * @psalm-api
  *
- * @psalm-type MigrationDirs = list<array<non-empty-string, non-empty-string>>
  * @psalm-type SqlDirs = list<non-empty-string>
- * @psalm-type SqlAssoc = array<non-empty-string, non-empty-string>
+ * @psalm-type SqlAssoc = array<non-empty-string, non-empty-string|list<non-empty-string>>
  * @psalm-type SqlMixed = list<non-empty-string|SqlAssoc>
  * @psalm-type SqlConfig = non-empty-string|SqlAssoc|SqlMixed
+ * @psalm-type MigrationDirsFlat = list<non-empty-string>
+ * @psalm-type MigrationDirsNamespaced = array<non-empty-string, non-empty-string|list<non-empty-string>>
+ * @psalm-type MigrationDirs = MigrationDirsFlat|MigrationDirsNamespaced
  */
 class Connection
 {
 	use GetsSetsPrint;
-
-	private const string TYPE_SQL = 'sql';
-	private const string TYPE_MIGRATION = 'migration';
 
 	/** @psalm-var non-empty-string */
 	public readonly string $driver;
@@ -40,7 +39,7 @@ class Connection
 
 	/**
 	 * @psalm-param SqlConfig $sql
-	 * @psalm-param MigrationDirs $migrations
+	 * @psalm-param SqlConfig|null $migrations
 	 * */
 	public function __construct(
 		public readonly string $dsn,
@@ -53,8 +52,8 @@ class Connection
 		bool $print = false,
 	) {
 		$this->driver = $this->readDriver($this->dsn);
-		$this->sql = $this->readDirs($sql, self::TYPE_SQL);
-		$this->migrations = $this->readDirs($migrations ?? [], self::TYPE_MIGRATION);
+		$this->sql = $this->readFlatDirs($sql);
+		$this->migrations = $this->readMigrationDirs($migrations ?? []);
 		$this->print = $print;
 	}
 
@@ -99,11 +98,23 @@ class Connection
 		return $this->getColumnName($this->migrationsColumnApplied);
 	}
 
-	/** @psalm-param non-empty-string $migrations */
+	/**
+	 * Adds a migration directory to the flat list.
+	 *
+	 * Note: This only works when migrations are configured as a flat list.
+	 * For namespaced migrations, configure them in the constructor.
+	 *
+	 * @psalm-param non-empty-string $migrations
+	 */
 	public function addMigrationDir(string $migrations): void
 	{
-		$migrations = $this->readDirs($migrations, self::TYPE_MIGRATION);
-		$this->migrations = array_merge($migrations, $this->migrations);
+		$dirs = $this->readFlatDirs($migrations);
+
+		// Only merge if migrations is a flat list
+		if (array_is_list($this->migrations)) {
+			/** @psalm-var MigrationDirsFlat */
+			$this->migrations = array_merge($dirs, $this->migrations);
+		}
 	}
 
 	/** @psalm-return MigrationDirs */
@@ -115,8 +126,8 @@ class Connection
 	/** @psalm-param SqlConfig $sql */
 	public function addSqlDirs(array|string $sql): void
 	{
-		$sql = $this->readDirs($sql, self::TYPE_SQL);
-		$this->sql = array_merge($sql, $this->sql);
+		$dirs = $this->readFlatDirs($sql);
+		$this->sql = array_merge($dirs, $this->sql);
 	}
 
 	public function sql(): array
@@ -129,7 +140,7 @@ class Connection
 	{
 		$result = realpath($path);
 
-		if ($result !== false) {
+		if ($result !== false && $result !== '') {
 			return $result;
 		}
 
@@ -151,103 +162,180 @@ class Connection
 	}
 
 	/**
-	 * @psalm-param SqlAssoc $entry
+	 * Reads directories from configuration into a flat list.
 	 *
-	 * @psalm-return MigrationDirs
+	 * @psalm-param SqlConfig $config
+	 *
+	 * @psalm-return list<non-empty-string>
 	 */
-	protected function prepareDirs(array $entry, string $type): array
+	protected function readFlatDirs(string|array $config, bool $preserveOrder = false): array
 	{
-		$hasDriver = array_key_exists($this->driver, $entry);
-		$hasAll = array_key_exists('all', $entry);
-		/** @psalm-var MigrationDirs */
+		if (is_string($config)) {
+			return [$this->preparePath($config)];
+		}
+
+		if (count($config) === 0) {
+			return [];
+		}
+
+		if (Util::isAssoc($config)) {
+			return $this->readAssocDirs($config);
+		}
+
+		/** @psalm-var list<non-empty-string> */
 		$dirs = [];
 
-		if ($type === self::TYPE_SQL || $hasDriver || $hasAll) {
-			// Add sql scripts for the current pdo driver.
-			// Should be the first in the list as they
-			// may have platform specific queries.
-			if ($hasDriver) {
-				$dirs = $this->collectDirs($dirs, $entry[$this->driver]);
-			}
-
-			// Add sql scripts for all platforms
-			if ($hasAll) {
-				$dirs = $this->collectDirs($dirs, $entry['all']);
-			}
-
-			return $dirs;
-		}
-
-		// If we get here it must be migrations
-		foreach ($entry as $namespace => $migrations) {
-			if (is_array($migrations)) {
-				if (array_is_list($migrations)) {
-					$dirs[$namespace] = $this->collectDirs([], $migrations);
+		foreach ($config as $entry) {
+			if (is_string($entry)) {
+				if ($preserveOrder) {
+					$dirs[] = $this->preparePath($entry);
 				} else {
-					$dirs[$namespace] = $this->prepareDirs($migrations, $type);
+					array_unshift($dirs, $this->preparePath($entry));
 				}
-			} else {
-				$dirs[$namespace] = $this->preparePath($migrations);
+
+				continue;
 			}
-		}
 
-		return $dirs;
-	}
+			if (array_is_list($entry)) {
+				foreach ($entry as $path) {
+					if (is_string($path)) {
+						if ($preserveOrder) {
+							$dirs[] = $this->preparePath($path);
+						} else {
+							array_unshift($dirs, $this->preparePath($path));
+						}
+					}
+				}
 
-	protected function collectDirs(array $dirs, string|array $entry): array
-	{
-		if (is_string($entry)) {
-			$dirs[] = $this->preparePath($entry);
-		} else {
-			$dirs = array_merge($dirs, array_map(fn($e) => $this->preparePath($e), $entry));
+				continue;
+			}
+
+			if ($preserveOrder) {
+				$dirs = array_merge($dirs, $this->readAssocDirs($entry));
+			} else {
+				$dirs = array_merge($this->readAssocDirs($entry), $dirs);
+			}
 		}
 
 		return $dirs;
 	}
 
 	/**
-	 * Adds the sql script paths from configuration.
+	 * Reads directories from an associative array config.
 	 *
-	 * Script paths are ordered last in first out (LIFO).
-	 * Which means the last path added is the first one searched
-	 * for a SQL script.
+	 * @psalm-param array<array-key, mixed> $entry
 	 *
-	 * @psalm-param SqlConfig $sql
-	 *
-	 * @psalm-return MigrationDirs
+	 * @psalm-return list<non-empty-string>
 	 */
-	protected function readDirs(string|array $sql, string $type): array
+	protected function readAssocDirs(array $entry): array
 	{
-		if (is_string($sql)) {
-			/** @psalm-var MigrationDirs */
-			return [$this->preparePath($sql)];
-		}
-
-		if (Util::isAssoc($sql)) {
-			/** @psalm-var SqlAssoc $sql */
-			return $this->prepareDirs($sql, $type);
-		}
-
-		/** @psalm-var MigrationDirs */
+		$hasDriver = array_key_exists($this->driver, $entry);
+		$hasAll = array_key_exists('all', $entry);
+		/** @psalm-var list<non-empty-string> */
 		$dirs = [];
 
-		foreach ($sql as $entry) {
-			if (is_string($entry)) {
-				array_unshift($dirs, $this->preparePath($entry));
+		if ($hasDriver) {
+			/** @var mixed */
+			$driverEntry = $entry[$this->driver];
 
-				continue;
+			if (is_string($driverEntry)) {
+				$dirs[] = $this->preparePath($driverEntry);
+			} elseif (is_array($driverEntry)) {
+				/** @var mixed $path */
+				foreach ($driverEntry as $path) {
+					if (is_string($path)) {
+						$dirs[] = $this->preparePath($path);
+					}
+				}
 			}
+		}
 
-			if (array_is_list($entry)) {
-				$dirs = array_merge(array_map(fn($e) => $this->preparePath($e), $entry), $dirs);
+		if ($hasAll) {
+			/** @var mixed */
+			$allEntry = $entry['all'];
 
-				continue;
+			if (is_string($allEntry)) {
+				$dirs[] = $this->preparePath($allEntry);
+			} elseif (is_array($allEntry)) {
+				/** @var mixed $path */
+				foreach ($allEntry as $path) {
+					if (is_string($path)) {
+						$dirs[] = $this->preparePath($path);
+					}
+				}
 			}
-
-			$dirs = array_merge($this->prepareDirs($entry, $type), $dirs);
 		}
 
 		return $dirs;
+	}
+
+	/**
+	 * Reads migration directories from configuration.
+	 *
+	 * Migrations can be configured as:
+	 * - A flat list of directories
+	 * - A namespaced structure with string keys mapping to directories
+	 *
+	 * @psalm-param SqlConfig $config
+	 *
+	 * @psalm-return MigrationDirs
+	 */
+	protected function readMigrationDirs(string|array $config): array
+	{
+		if (is_string($config)) {
+			return [$this->preparePath($config)];
+		}
+
+		if (count($config) === 0) {
+			return [];
+		}
+
+		// Check if this is a namespaced config (assoc array with non-driver/all keys)
+		if (Util::isAssoc($config) && !$this->isDriverConfig($config)) {
+			return $this->readNamespacedDirs($config);
+		}
+
+		// Otherwise treat as flat dirs
+		return $this->readFlatDirs($config);
+	}
+
+	/**
+	 * Checks if an associative array is a driver-specific config.
+	 *
+	 * @psalm-param array<array-key, mixed> $config
+	 */
+	protected function isDriverConfig(array $config): bool
+	{
+		return array_key_exists($this->driver, $config) || array_key_exists('all', $config);
+	}
+
+	/**
+	 * Reads namespaced migration directories.
+	 *
+	 * @psalm-param array<array-key, mixed> $config
+	 *
+	 * @psalm-return MigrationDirsNamespaced
+	 */
+	protected function readNamespacedDirs(array $config): array
+	{
+		/** @psalm-var MigrationDirsNamespaced */
+		$result = [];
+
+		/** @var mixed $dirs */
+		foreach ($config as $namespace => $dirs) {
+			if (!is_string($namespace) || $namespace === '') {
+				continue;
+			}
+
+			if (is_string($dirs)) {
+				$result[$namespace] = $this->preparePath($dirs);
+			} elseif (is_array($dirs)) {
+				/** @psalm-suppress MixedArgumentTypeCoercion */
+				$result[$namespace] = $this->readFlatDirs($dirs, preserveOrder: true);
+			}
+		}
+
+		return $result;
 	}
 
 	protected function getColumnName(string $column): string

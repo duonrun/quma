@@ -13,8 +13,6 @@ use Throwable;
 
 /**
  * @psalm-api
- *
- * @psalm-import-type MigrationDirs from \Duon\Quma\Connection
  */
 class Environment
 {
@@ -51,9 +49,12 @@ class Environment
 		$this->columnApplied = $this->conn->migrationsColumnApplied();
 	}
 
+	/**
+	 * @return array<string, list<string>>|false
+	 */
 	public function getMigrations(): array|false
 	{
-		/** @psalm-var MigrationDirs */
+		/** @var array<string, list<string>> */
 		$migrations = [];
 		$migrationDirs = $this->conn->migrations();
 
@@ -63,29 +64,50 @@ class Environment
 			return false;
 		}
 
+		// Check if migrations is a flat list or namespaced
 		if (array_is_list($migrationDirs)) {
+			// Flat list: wrap in 'default' namespace
+			/** @var list<non-empty-string> $migrationDirs */
 			$migrations['default'] = $this->collectMigrations($migrationDirs);
+		} else {
+			// Namespaced: process each namespace
+			/** @var mixed $dirs */
+			foreach ($migrationDirs as $namespace => $dirs) {
+				if (!is_string($namespace)) {
+					continue;
+				}
 
-			return $migrations;
-		}
-
-		foreach ($migrationDirs as $namespace => $namespaceDirs) {
-			$migrations[$namespace] = $this->collectMigrations($namespaceDirs);
+				if (is_string($dirs) && $dirs !== '') {
+					$migrations[$namespace] = $this->collectMigrations([$dirs]);
+				} elseif (is_array($dirs)) {
+					/** @var list<non-empty-string> $dirs */
+					$migrations[$namespace] = $this->collectMigrations($dirs);
+				}
+			}
 		}
 
 		return $migrations;
 	}
 
+	/**
+	 * @param list<non-empty-string> $migrationDirs
+	 *
+	 * @return list<string>
+	 */
 	protected function collectMigrations(array $migrationDirs): array
 	{
 		$migrations = [];
 
 		foreach ($migrationDirs as $path) {
+			$phpFiles = glob("{$path}/*.php");
+			$sqlFiles = glob("{$path}/*.sql");
+			$tpqlFiles = glob("{$path}/*.tpql");
+
 			$migrations = array_merge(
 				$migrations,
-				array_filter(glob("{$path}/*.php"), 'is_file'),
-				array_filter(glob("{$path}/*.sql"), 'is_file'),
-				array_filter(glob("{$path}/*.tpql"), 'is_file'),
+				is_array($phpFiles) ? array_filter($phpFiles, 'is_file') : [],
+				is_array($sqlFiles) ? array_filter($sqlFiles, 'is_file') : [],
+				is_array($tpqlFiles) ? array_filter($tpqlFiles, 'is_file') : [],
 			);
 		}
 
@@ -97,7 +119,7 @@ class Environment
 			return (basename($a) < basename($b)) ? -1 : 1;
 		});
 
-		return $migrations;
+		return array_values($migrations);
 	}
 
 	public function checkIfMigrationsTableExists(Database $db): bool

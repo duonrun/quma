@@ -128,7 +128,14 @@ final class Migrations extends Command
 
 			$script = file_get_contents($migration);
 
-			if (empty(trim($script))) {
+			if ($script === false) {
+				$this->showMessage($migration, new RuntimeException("Could not read migration file"));
+				$result = self::ERROR;
+
+				break;
+			}
+
+			if (trim($script) === '') {
 				$this->showEmptyMessage($migration);
 				$result = self::WARNING;
 
@@ -319,7 +326,7 @@ final class Migrations extends Command
 				throw $error;
 			}
 
-			if (empty(trim($script))) {
+			if ($script === false || trim($script) === '') {
 				$this->showEmptyMessage($migration);
 
 				return self::WARNING;

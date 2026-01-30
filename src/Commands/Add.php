@@ -24,7 +24,14 @@ final class Add extends Command
 		if (empty($fileName)) {
 			// Would stop the test suit and wait for input
 			// @codeCoverageIgnoreStart
-			$fileName = readline('Name of the migration script: ');
+			$input = readline('Name of the migration script: ');
+
+			if ($input === false) {
+				echo "No input provided. Aborting.\n";
+
+				return 1;
+			}
+			$fileName = $input;
 			// @codeCoverageIgnoreEnd
 		}
 
@@ -45,11 +52,23 @@ final class Add extends Command
 
 		$migrations = $env->conn->migrations();
 
-		// Get the first migrations directory from the list (the last one added)
-		// TODO: let the user choose the migrations dir if there are more than one
-		$migrationsDir = $migrations[0];
+		if (count($migrations) === 0) {
+			echo "No migration directories configured. Aborting.\n";
 
-		if ($migrationsDir && strpos($migrationsDir, '/vendor') !== false) {
+			return 1;
+		}
+
+		// Get the first migrations directory from the config
+		// Handles both flat list and namespaced formats
+		$migrationsDir = $this->getFirstMigrationDir($migrations);
+
+		if ($migrationsDir === null) {
+			echo "No valid migration directory found. Aborting.\n";
+
+			return 1;
+		}
+
+		if (strpos($migrationsDir, '/vendor') !== false) {
 			echo "The migrations directory is inside './vendor'.\n  -> {$migrationsDir}\nAborting.\n";
 
 			return 1;
@@ -65,6 +84,12 @@ final class Add extends Command
 
 		$migration = $migrationsDir . DIRECTORY_SEPARATOR . $timestamp . '-' . $fileName;
 		$f = fopen($migration, 'w');
+
+		if ($f === false) {
+			echo "Could not create migration file: {$migration}\nAborting.\n";
+
+			return 1;
+		}
 
 		if ($ext === 'php') {
 			fwrite($f, $this->getPhpContent($fileName, $timestamp));
@@ -124,5 +149,29 @@ return new {$className}();";
 
 <?php endif ?>
 ";
+	}
+
+	/**
+	 * Gets the first migration directory from the config.
+	 *
+	 * Handles both flat list and namespaced formats.
+	 *
+	 * @param array<int|string, string|list<string>> $migrations
+	 */
+	protected function getFirstMigrationDir(array $migrations): ?string
+	{
+		$first = reset($migrations);
+
+		if ($first === false) {
+			return null;
+		}
+
+		// If it's a string, return it directly
+		if (is_string($first)) {
+			return $first;
+		}
+
+		// It's a list, return the first element
+		return $first[0] ?? null;
 	}
 }

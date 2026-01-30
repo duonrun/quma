@@ -67,7 +67,9 @@ class Script
 		/** @psalm-suppress UnresolvableInclude */
 		include $____template_path____;
 
-		return ob_get_clean();
+		$result = ob_get_clean();
+
+		return $result !== false ? $result : '';
 	}
 
 	/**
@@ -79,13 +81,13 @@ class Script
 	protected function prepareTemplateVars(string $script, Args $args): array
 	{
 		// Remove PostgreSQL blocks
-		$script = preg_replace(Query::PATTERN_BLOCK, ' ', $script);
+		$cleaned = preg_replace(Query::PATTERN_BLOCK, ' ', $script);
 		// Remove strings
-		$script = preg_replace(Query::PATTERN_STRING, ' ', $script);
+		$cleaned = preg_replace(Query::PATTERN_STRING, ' ', $cleaned ?? '');
 		// Remove /* */ comments
-		$script = preg_replace(Query::PATTERN_COMMENT_MULTI, ' ', $script);
+		$cleaned = preg_replace(Query::PATTERN_COMMENT_MULTI, ' ', $cleaned ?? '');
 		// Remove single line comments
-		$script = preg_replace(Query::PATTERN_COMMENT_SINGLE, ' ', $script);
+		$cleaned = preg_replace(Query::PATTERN_COMMENT_SINGLE, ' ', $cleaned ?? '');
 
 		$newArgs = [];
 
@@ -94,7 +96,7 @@ class Script
 		// Would not find a var if it is at the very beginning of script.
 		$matches = preg_match_all(
 			'/[^:]:[a-zA-Z][a-zA-Z0-9_]*/',
-			$script,
+			$cleaned ?? '',
 			$result,
 			PREG_PATTERN_ORDER,
 		);
