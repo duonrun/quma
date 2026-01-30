@@ -10,11 +10,7 @@
 		}
 	],
 	"homepage": "https://duon.run/quma",
-	"keywords": [
-		"duon",
-		"database",
-		"sql"
-	],
+	"keywords": ["duon", "database", "sql"],
 	"autoload": {
 		"psr-4": {
 			"Duon\\Quma\\": "src/"
