@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Duon\Quma;
 
-class Util
+final class Util
 {
 	public static function isAssoc(array $arr): bool
 	{

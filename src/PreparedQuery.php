@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Duon\Quma;
 
-class PreparedQuery
+final class PreparedQuery
 {
 	/** @psalm-param array<non-empty-string, non-empty-string> $swaps */
 	public function __construct(

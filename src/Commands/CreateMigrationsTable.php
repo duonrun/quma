@@ -6,7 +6,7 @@ namespace Duon\Quma\Commands;
 
 use Throwable;
 
-class CreateMigrationsTable extends Command
+final class CreateMigrationsTable extends Command
 {
 	protected string $name = 'create-migrations-table';
 	protected string $group = 'Database';

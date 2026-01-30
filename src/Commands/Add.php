@@ -6,7 +6,7 @@ namespace Duon\Quma\Commands;
 
 use Duon\Cli\Opts;
 
-class Add extends Command
+final class Add extends Command
 {
 	protected string $name = 'add-migration';
 	protected string $group = 'Database';

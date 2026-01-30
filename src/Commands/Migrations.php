@@ -13,7 +13,7 @@ use PDOException;
 use RuntimeException;
 use Throwable;
 
-class Migrations extends Command
+final class Migrations extends Command
 {
 	protected const STARTED = 'start';
 	protected const ERROR = 'error';

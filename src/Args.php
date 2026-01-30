@@ -9,7 +9,7 @@ use Duon\Quma\Util;
 /**
  * @psalm-type ArgsArray = list<mixed>|array<non-empty-string, mixed>
  */
-class Args
+final class Args
 {
 	protected ArgType $type;
 	protected int $count;
