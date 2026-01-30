@@ -22,8 +22,8 @@ class Connection
 {
 	use GetsSetsPrint;
 
-	private const TYPE_SQL = 'sql';
-	private const TYPE_MIGRATION = 'migration';
+	private const string TYPE_SQL = 'sql';
+	private const string TYPE_MIGRATION = 'migration';
 
 	/** @psalm-var non-empty-string */
 	public readonly string $driver;

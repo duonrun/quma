@@ -16,10 +16,10 @@ use Throwable;
 
 final class Migrations extends Command
 {
-	protected const STARTED = 'start';
-	protected const ERROR = 'error';
-	protected const WARNING = 'warning';
-	protected const SUCCESS = 'success';
+	protected const string STARTED = 'start';
+	protected const string ERROR = 'error';
+	protected const string WARNING = 'warning';
+	protected const string SUCCESS = 'success';
 
 	protected readonly Environment $env;
 	protected string $name = 'migrations';

@@ -13,16 +13,16 @@ use PDOStatement;
 class Query
 {
 	// Matches multi line single and double quotes and handles \' \" escapes
-	public const PATTERN_STRING = '/([\'"])(?:\\\1|[\s\S])*?\1/';
+	public const string PATTERN_STRING = '/([\'"])(?:\\\1|[\s\S])*?\1/';
 
 	// PostgreSQL blocks delimited with $$
-	public const PATTERN_BLOCK = '/(\$\$)[\s\S]*?\1/';
+	public const string PATTERN_BLOCK = '/(\$\$)[\s\S]*?\1/';
 
 	// Multi line comments /* */
-	public const PATTERN_COMMENT_MULTI = '/\/\*([\s\S]*?)\*\//';
+	public const string PATTERN_COMMENT_MULTI = '/\/\*([\s\S]*?)\*\//';
 
 	// Single line comments --
-	public const PATTERN_COMMENT_SINGLE = '/--.*$/m';
+	public const string PATTERN_COMMENT_SINGLE = '/--.*$/m';
 
 	protected PDOStatement $stmt;
 	protected bool $executed = false;
