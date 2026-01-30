@@ -3,13 +3,10 @@
 	"description": "A no-ORM database library for executing raw SQL files",
 	"type": "library",
 	"license": "MIT",
-	"minimum-stability": "dev",
-	"prefer-stable": true,
 	"authors": [
 		{
-			"name": "Ernst",
-			"email": "ernst@duon.run",
-			"role": "Developer"
+			"name": "Thomas Ernst",
+			"email": "duon@ebenefuenf.de"
 		}
 	],
 	"homepage": "https://duon.run/quma",
@@ -36,7 +33,7 @@
 		"duon/cli": "^0.1"
 	},
 	"require-dev": {
-		"duon/dev": "^2.4"
+		"duon/dev": "^2.5"
 	},
 	"scripts": {
 		"test": [
@@ -53,12 +50,6 @@
 			"composer check",
 			"composer mdlint"
 		],
-		"benchmark": "php bench/run.php",
-		"post-install-cmd": [
-			"Duon\\Development\\Config::sync"
-		],
-		"post-update-cmd": [
-			"Duon\\Development\\Config::sync"
-		]
+		"benchmark": "php bench/run.php"
 	}
 }
