@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Duon\Quma\Commands;
 
+use Override;
 use Throwable;
 
 final class CreateMigrationsTable extends Command
@@ -13,6 +14,7 @@ final class CreateMigrationsTable extends Command
 	protected string $prefix = 'db';
 	protected string $description = 'Creates a migrations table';
 
+	#[Override]
 	public function run(): string|int
 	{
 		$env = $this->env;

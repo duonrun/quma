@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Duon\Quma\Commands;
 
 use Duon\Cli\Opts;
+use Override;
 
 final class Add extends Command
 {
@@ -13,6 +14,7 @@ final class Add extends Command
 	protected string $prefix = 'db';
 	protected string $description = 'Initialize a new migration';
 
+	#[Override]
 	public function run(): string|int
 	{
 		$env = $this->env;

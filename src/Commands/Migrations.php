@@ -9,6 +9,7 @@ use Duon\Cli\Opts;
 use Duon\Quma\Connection;
 use Duon\Quma\Database;
 use Duon\Quma\Environment;
+use Override;
 use PDOException;
 use RuntimeException;
 use Throwable;
@@ -36,6 +37,7 @@ final class Migrations extends Command
 		}
 	}
 
+	#[Override]
 	public function run(): string|int
 	{
 		$env = $this->env;
