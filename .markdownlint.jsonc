@@ -17,6 +17,9 @@
 	// Allow duplicate headings in different sections
 	"MD024": { "siblings_only": true },
 
+	// Allow multiple H1s when frontmatter has title
+	"MD025": { "front_matter_title": "" },
+
 	// Allow inline HTML (for Vue components and special syntax)
 	"MD033": false,
 
@@ -32,5 +35,5 @@
 
 	// Emphasis styles
 	"MD049": { "style": "underscore" }, // _ <em>
-	"MD050": { "style": "asterisk" }, // ** <strong>
+	"MD050": { "style": "asterisk" } // ** <strong>
 }
