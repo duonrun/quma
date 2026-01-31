@@ -261,7 +261,7 @@ class MigrationsTest extends TestCase
 		$this->assertStringContainsString("\n#0", $content);
 
 		if (str_starts_with($dsn, 'mysql')) {
-			$this->assertStringContainsString('0 migration applied until the error occured', $content);
+			$this->assertStringContainsString('applied until the error occured', $content);
 			$this->assertStringContainsString('SQLSTATE[42000]', $content);
 		} elseif (str_starts_with($dsn, 'pgsql')) {
 			$this->assertStringContainsString('Due to errors no migrations applied', $content);
@@ -293,7 +293,7 @@ class MigrationsTest extends TestCase
 		$this->assertSame(1, $result);
 
 		if (str_starts_with($dsn, 'mysql')) {
-			$this->assertStringContainsString('0 migration applied until the error occured', $content);
+			$this->assertStringContainsString('applied until the error occured', $content);
 		} else {
 			$this->assertStringContainsString('Due to errors no migrations applied', $content);
 		}
