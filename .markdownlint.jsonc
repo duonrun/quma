@@ -1,7 +1,7 @@
 {
 	"default": true,
 
-	// Heading style
+	// Heading style - require atx style (#)
 	"MD003": { "style": "atx" },
 
 	// List styles
@@ -17,7 +17,7 @@
 	// Allow duplicate headings in different sections
 	"MD024": { "siblings_only": true },
 
-	// Allow multiple H1s when frontmatter has title
+	// Ignore frontmatter title - it's metadata, not a document heading
 	"MD025": { "front_matter_title": "" },
 
 	// Allow inline HTML (for Vue components and special syntax)
@@ -35,5 +35,5 @@
 
 	// Emphasis styles
 	"MD049": { "style": "underscore" }, // _ <em>
-	"MD050": { "style": "asterisk" } // ** <strong>
+	"MD050": { "style": "asterisk" }, // ** <strong>
 }
