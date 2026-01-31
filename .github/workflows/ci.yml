@@ -51,7 +51,7 @@ jobs:
 
       - name: Upload coverage report to Codacy
         continue-on-error: true
-        run: bash <(curl -Ls https://coverage.codacy.com/get.sh)
+        run: bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r coverage.xml
         env:
           CODACY_API_TOKEN: ${{secrets.CODACY_ACCOUNT_TOKEN}}
           CODACY_ORGANIZATION_PROVIDER: gh
