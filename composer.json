@@ -46,7 +46,7 @@
 			"./vendor/bin/coverlyzer coverage/cover.php"
 		],
 		"ci": [
-			"composer coverage",
+			"QUMA_TEST_DRIVERS=sqlite,mysql,pgsql composer coverage",
 			"composer check",
 			"composer mdlint"
 		],
