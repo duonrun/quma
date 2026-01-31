@@ -55,10 +55,17 @@ class AddMigrationTest extends TestCase
 			$this->fail('Unable to create a temporary file for the test.');
 		}
 
-		ob_start();
-		$result = (new Runner($this->commands(migrations: ['temp' => $tempFile])))->run();
-		$output = ob_get_contents();
-		ob_end_clean();
+		$handler = set_error_handler(static fn(): bool => true);
+		try {
+			ob_start();
+			$result = (new Runner($this->commands(migrations: ['temp' => $tempFile])))->run();
+			$output = ob_get_contents();
+			ob_end_clean();
+		} finally {
+			if ($handler !== null) {
+				restore_error_handler();
+			}
+		}
 
 		@unlink($tempFile);
 

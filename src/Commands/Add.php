@@ -83,7 +83,7 @@ final class Add extends Command
 		$timestamp = date('ymd-His', time());
 
 		$migration = $migrationsDir . DIRECTORY_SEPARATOR . $timestamp . '-' . $fileName;
-		$f = @fopen($migration, 'w');
+		$f = fopen($migration, 'w');
 
 		if ($f === false) {
 			echo "Could not create migration file: {$migration}\nAborting.\n";
