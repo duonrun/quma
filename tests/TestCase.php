@@ -21,14 +21,25 @@ use Throwable;
 class TestCase extends BaseTestCase
 {
 	protected const DS = DIRECTORY_SEPARATOR;
-	protected static string $sqliteDbPath1;
-	protected static string $sqliteDbPath2;
+	private static ?string $sqliteDbPath1 = null;
+	private static ?string $sqliteDbPath2 = null;
 
-	#[Override]
-	public static function setUpBeforeClass(): void
+	protected static function getSqliteDbPath1(): string
 	{
-		self::$sqliteDbPath1 = getenv('QUMA_SQLITE_DB_PATH_1') ?: 'quma_db1.sqlite3';
-		self::$sqliteDbPath2 = getenv('QUMA_SQLITE_DB_PATH_2') ?: 'quma_db2.sqlite3';
+		if (self::$sqliteDbPath1 === null) {
+			self::$sqliteDbPath1 = getenv('QUMA_SQLITE_DB_PATH_1') ?: 'quma_db1.sqlite3';
+		}
+
+		return self::$sqliteDbPath1;
+	}
+
+	protected static function getSqliteDbPath2(): string
+	{
+		if (self::$sqliteDbPath2 === null) {
+			self::$sqliteDbPath2 = getenv('QUMA_SQLITE_DB_PATH_2') ?: 'quma_db2.sqlite3';
+		}
+
+		return self::$sqliteDbPath2;
 	}
 
 	public static function root(): string
@@ -187,8 +198,8 @@ class TestCase extends BaseTestCase
 
 	public static function cleanUpTestDbs(): void
 	{
-		@unlink(self::getDbFile(self::$sqliteDbPath1));
-		@unlink(self::getDbFile(self::$sqliteDbPath2));
+		@unlink(self::getDbFile(self::getSqliteDbPath1()));
+		@unlink(self::getDbFile(self::getSqliteDbPath2()));
 
 		foreach (self::getServerDsns() as $dsn) {
 			try {
@@ -206,7 +217,7 @@ class TestCase extends BaseTestCase
 	{
 		return [
 			$firstKey => $this->connection(),
-			'second' => $this->connection($this->getDsn(self::$sqliteDbPath2)),
+			'second' => $this->connection($this->getDsn(self::getSqliteDbPath2())),
 		];
 	}
 
@@ -248,14 +259,14 @@ class TestCase extends BaseTestCase
 
 	protected static function getDbFile(string $file = null): string
 	{
-		$file = $file ?? self::$sqliteDbPath1;
+		$file = $file ?? self::getSqliteDbPath1();
 
 		return sys_get_temp_dir() . DIRECTORY_SEPARATOR . $file;
 	}
 
 	protected static function getDsn(string $file = null): string
 	{
-		$file = $file ?? self::$sqliteDbPath1;
+		$file = $file ?? self::getSqliteDbPath1();
 		return 'sqlite:' . self::getDbFile($file);
 	}
 }
