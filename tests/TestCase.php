@@ -8,6 +8,7 @@ use Duon\Cli\Commands;
 use Duon\Quma\Commands as QumaCommands;
 use Duon\Quma\Connection;
 use Duon\Quma\Database;
+use Override;
 use PDO;
 use PHPUnit\Framework\TestCase as BaseTestCase;
 use Throwable;
@@ -20,8 +21,15 @@ use Throwable;
 class TestCase extends BaseTestCase
 {
 	protected const DS = DIRECTORY_SEPARATOR;
-	protected const DB_FILE_1 = 'quma_db1.sqlite3';
-	protected const DB_FILE_2 = 'quma_db2.sqlite3';
+	protected static string $sqliteDbPath1;
+	protected static string $sqliteDbPath2;
+
+	#[Override]
+	public static function setUpBeforeClass(): void
+	{
+		self::$sqliteDbPath1 = getenv('QUMA_SQLITE_DB_PATH_1') ?: 'quma_db1.sqlite3';
+		self::$sqliteDbPath2 = getenv('QUMA_SQLITE_DB_PATH_2') ?: 'quma_db2.sqlite3';
+	}
 
 	public static function root(): string
 	{
@@ -179,8 +187,8 @@ class TestCase extends BaseTestCase
 
 	public static function cleanUpTestDbs(): void
 	{
-		@unlink(self::getDbFile(self::DB_FILE_1));
-		@unlink(self::getDbFile(self::DB_FILE_2));
+		@unlink(self::getDbFile(self::$sqliteDbPath1));
+		@unlink(self::getDbFile(self::$sqliteDbPath2));
 
 		foreach (self::getServerDsns() as $dsn) {
 			try {
@@ -198,7 +206,7 @@ class TestCase extends BaseTestCase
 	{
 		return [
 			$firstKey => $this->connection(),
-			'second' => $this->connection($this->getDsn(self::DB_FILE_2)),
+			'second' => $this->connection($this->getDsn(self::$sqliteDbPath2)),
 		];
 	}
 
@@ -219,13 +227,13 @@ class TestCase extends BaseTestCase
 
 	protected static function getServerDsns(): array
 	{
-		$dbPgsqlHost = getenv('DB_PGSQL_HOST') ?: 'localhost';
+		$dbPgsqlHost = getenv('QUMA_DB_PGSQL_HOST') ?: 'localhost';
 		// MySQL tries to use a local socket when host=localhost
 		// is specified which does not work with WSL2/Windows.
-		$dbMysqlHost = getenv('DB_MYSQL_HOST') ?: '127.0.0.1';
-		$dbName = getenv('DB_NAME') ?: 'quma_db';
-		$dbUser = getenv('DB_USER') ?: 'quma_user';
-		$dbPassword = getenv('DB_PASSWORD') ?: 'quma_password';
+		$dbMysqlHost = getenv('QUMA_DB_MYSQL_HOST') ?: '127.0.0.1';
+		$dbName = getenv('QUMA_DB_NAME') ?: 'quma';
+		$dbUser = getenv('QUMA_DB_USER') ?: 'quma';
+		$dbPassword = getenv('QUMA_DB_PASSWORD') ?: 'quma';
 
 		return [
 			[
@@ -238,13 +246,16 @@ class TestCase extends BaseTestCase
 		];
 	}
 
-	protected static function getDbFile(string $file = self::DB_FILE_1): string
+	protected static function getDbFile(string $file = null): string
 	{
+		$file = $file ?? self::$sqliteDbPath1;
+
 		return sys_get_temp_dir() . DIRECTORY_SEPARATOR . $file;
 	}
 
-	protected static function getDsn(string $file = self::DB_FILE_1): string
+	protected static function getDsn(string $file = null): string
 	{
+		$file = $file ?? self::$sqliteDbPath1;
 		return 'sqlite:' . self::getDbFile($file);
 	}
 }

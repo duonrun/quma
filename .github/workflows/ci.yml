@@ -9,11 +9,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      DB_MYSQL_HOST: localhost
-      DB_PGSQL_HOST: localhost
-      DB_NAME: quma_db
-      DB_USER: root
-      DB_PASSWORD: root
+      QUMA_DB_MYSQL_HOST: localhost
+      QUMA_DB_PGSQL_HOST: localhost
+      QUMA_DB_NAME: quma_db
+      QUMA_DB_USER: root
+      QUMA_DB_PASSWORD: root
     steps:
       - name: Setup PHP extensions
         uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1 # v2
@@ -34,13 +34,13 @@ jobs:
       - name: Start mysql server and create test db
         run: |
           sudo systemctl start mysql.service
-          mysql -e 'CREATE DATABASE `${{ env.DB_NAME }}`;' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
+          mysql -e 'CREATE DATABASE `${{ env.QUMA_DB_NAME }}`;' -u${{ env.QUMA_DB_USER }} -p${{ env.QUMA_DB_PASSWORD }}
 
       - name: Start postgresql server and create test db
         run: |
           sudo systemctl start postgresql.service
-          sudo -u postgres createdb ${{ env.DB_NAME }}
-          sudo -u postgres psql -c "CREATE USER ${{ env.DB_USER }} WITH SUPERUSER PASSWORD '${{ env.DB_PASSWORD }}';"
+          sudo -u postgres createdb ${{ env.QUMA_DB_NAME }}
+          sudo -u postgres psql -c "CREATE USER ${{ env.QUMA_DB_USER }} WITH SUPERUSER PASSWORD '${{ env.QUMA_DB_PASSWORD }}';"
 
       - name: Run tests
         run: php -d pcov.enabled=1 ./vendor/bin/phpunit --coverage-clover=coverage.xml --coverage-filter=src --coverage-html=coverage

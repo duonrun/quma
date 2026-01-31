@@ -10,21 +10,56 @@ This project is a PHP port of Python library [quma](https://quma.readthedocs.io)
 
 ## Test Databases
 
-### Mysql
+Set up a local test database with a dedicated user. Both CLI and SQL commands create equivalent results. 
 
-```sql
-CREATE DATABASE quma_db;
-CREATE USER quma_user@'%' IDENTIFIED BY 'quma_password';
-GRANT ALL ON quma_db.* TO quma_user@'%';
-```
+The examples below use default values (`quma` for database name, username, and password). You can change these to your preferred values, but if you do, you must set the corresponding environment variables to make the test suite aware of your changes (see [Environment Variables](#environment-variables)).
 
 ### PostgreSQL
 
+Using the CLI:
+```bash
+echo "quma" | createuser --pwprompt --createdb quma
+createdb --owner quma quma
+```
+
+Using SQL:
 ```sql
-CREATE DATABASE quma_db WITH TEMPLATE = template0 ENCODING = 'UTF8';
-CREATE USER quma_user PASSWORD 'quma_password';
-GRANT ALL PRIVILEGES ON DATABASE quma_db TO quma_user;
-ALTER DATABASE quma_db OWNER TO quma_user;
+CREATE ROLE quma WITH LOGIN PASSWORD 'quma' CREATEDB;
+CREATE DATABASE quma WITH OWNER quma;
+```
+
+### MySQL/MariaDB
+
+Using the CLI:
+```bash
+mysql -u root -p -e "CREATE DATABASE quma; CREATE USER 'quma'@'localhost' IDENTIFIED BY 'quma'; GRANT ALL PRIVILEGES ON quma.* TO 'quma'@'localhost';"
+```
+
+Using SQL:
+```sql
+CREATE DATABASE quma;
+CREATE USER 'quma'@'localhost' IDENTIFIED BY 'quma';
+GRANT ALL PRIVILEGES ON quma.* TO 'quma'@'localhost';
+```
+
+### Environment Variables
+
+Override test database configuration using environment variables:
+
+- `QUMA_SQLITE_DB_PATH_1`: Path for primary SQLite database (default: `quma_db1.sqlite3`)
+- `QUMA_SQLITE_DB_PATH_2`: Path for secondary SQLite database (default: `quma_db2.sqlite3`)
+- `QUMA_DB_PGSQL_HOST`: PostgreSQL host (default: `localhost`)
+- `QUMA_DB_MYSQL_HOST`: MySQL host (default: `127.0.0.1`)
+- `QUMA_DB_NAME`: Database name (default: `quma`)
+- `QUMA_DB_USER`: Database user (default: `quma`)
+- `QUMA_DB_PASSWORD`: Database password (default: `quma`)
+
+Example:
+```bash
+export QUMA_DB_PGSQL_HOST=192.168.1.100
+export QUMA_DB_USER=testuser
+export QUMA_DB_PASSWORD=testpass
+composer test
 ```
 
 ## License
