@@ -42,15 +42,12 @@
 			"php -d xdebug.mode=coverage ./vendor/bin/phpunit --testdox --path-coverage --coverage-text --coverage-php=coverage/cover.php --colors=always",
 			"./vendor/bin/coverlyzer coverage/cover.php"
 		],
-		"coverage:all": [
-			"QUMA_TEST_DRIVERS=sqlite,mysql,pgsql composer coverage",
-			"./vendor/bin/coverlyzer coverage/cover.php"
-		],
-		"check": "./vendor/bin/psalm --no-cache",
+		"coverage:all": "QUMA_TEST_DRIVERS=sqlite,mysql,pgsql composer coverage",
+		"types": "./vendor/bin/psalm --no-cache",
 		"mdlint": "markdownlint-cli2 README.md CHANGELOG.md LICENSE.md docs/",
 		"ci": [
 			"composer coverage:all",
-			"composer check",
+			"composer types",
 			"composer mdlint"
 		],
 		"benchmark": "php bench/run.php"
