@@ -153,11 +153,15 @@ class EnvironmentTest extends TestCase
 
 		if (is_array($files)) {
 			foreach ($files as $file) {
-				@unlink($file);
+				if (is_file($file)) {
+					unlink($file);
+				}
 			}
 		}
 
-		@rmdir($dir);
+		if (is_dir($dir)) {
+			rmdir($dir);
+		}
 	}
 }
 

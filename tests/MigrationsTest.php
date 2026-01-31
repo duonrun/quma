@@ -156,7 +156,9 @@ class MigrationsTest extends TestCase
 		$result = (new Runner($this->commands()))->run();
 		$content = ob_get_contents();
 		ob_end_clean();
-		@unlink($migration);
+		if (is_file($migration)) {
+			unlink($migration);
+		}
 
 		$this->assertFileDoesNotExist($migration);
 		$this->assertSame(0, $result);
@@ -180,7 +182,9 @@ class MigrationsTest extends TestCase
 
 		$content = file_get_contents($migration);
 
-		@unlink($migration);
+		if (is_file($migration)) {
+			unlink($migration);
+		}
 		$this->assertFileDoesNotExist($migration);
 		$this->assertStringContainsString('<?php if', $content);
 	}
@@ -201,7 +205,9 @@ class MigrationsTest extends TestCase
 
 		$content = file_get_contents($migration);
 
-		@unlink($migration);
+		if (is_file($migration)) {
+			unlink($migration);
+		}
 		$this->assertFileDoesNotExist($migration);
 		$this->assertStringContainsString('TestMigration_', $content);
 		$this->assertStringContainsString('implements MigrationInterface', $content);
@@ -254,7 +260,9 @@ class MigrationsTest extends TestCase
 		$result = (new Runner($this->commands(dsn: $dsn)))->run();
 		$content = ob_get_contents();
 		ob_end_clean();
-		@unlink($migration);
+		if (is_file($migration)) {
+			unlink($migration);
+		}
 
 		$this->assertFileDoesNotExist($migration);
 		$this->assertSame(1, $result);
@@ -287,7 +295,9 @@ class MigrationsTest extends TestCase
 		$result = (new Runner($this->commands(dsn: $dsn)))->run();
 		$content = ob_get_contents();
 		ob_end_clean();
-		@unlink($migration);
+		if (is_file($migration)) {
+			unlink($migration);
+		}
 
 		$this->assertFileDoesNotExist($migration);
 		$this->assertSame(1, $result);

@@ -22,7 +22,9 @@ class MigrationsCommandTest extends TestCase
 		$db->execute('CREATE TABLE migrations (migration text, applied text)')->run();
 
 		$missing = sys_get_temp_dir() . '/missing-migration.sql';
-		@unlink($missing);
+		if (is_file($missing)) {
+			unlink($missing);
+		}
 
 		$command = new Migrations($conn);
 		$method = new ReflectionMethod(Migrations::class, 'runMigrations');

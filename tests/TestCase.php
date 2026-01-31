@@ -231,8 +231,14 @@ class TestCase extends BaseTestCase
 
 	public static function cleanUpTestDbs(): void
 	{
-		@unlink(self::getDbFile(self::getSqliteDbPath1()));
-		@unlink(self::getDbFile(self::getSqliteDbPath2()));
+		$dbPath1 = self::getDbFile(self::getSqliteDbPath1());
+		if (is_file($dbPath1)) {
+			unlink($dbPath1);
+		}
+		$dbPath2 = self::getDbFile(self::getSqliteDbPath2());
+		if (is_file($dbPath2)) {
+			unlink($dbPath2);
+		}
 		$drivers = self::getTestDrivers();
 
 		foreach (self::getServerDsns() as $dsn) {

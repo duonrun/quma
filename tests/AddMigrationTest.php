@@ -67,7 +67,9 @@ class AddMigrationTest extends TestCase
 			}
 		}
 
-		@unlink($tempFile);
+		if (is_file($tempFile)) {
+			unlink($tempFile);
+		}
 
 		$this->assertSame(1, $result);
 		$this->assertStringContainsString('Could not create migration file', $output);

@@ -12,7 +12,9 @@ $clean = static function (): void {
 
 	if ($paths !== false) {
 		foreach ($paths as $path) {
-			@unlink($path);
+			if (is_file($path)) {
+				unlink($path);
+			}
 		}
 	}
 
