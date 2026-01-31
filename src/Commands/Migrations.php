@@ -49,9 +49,13 @@ final class Migrations extends Command
 			$result = $createMigrationTableCmd->run();
 
 			if ($result !== 0) {
+				// Would require simulating a failing CreateMigrationsTable command
+				// without a test seam or altering the public API.
+				// @codeCoverageIgnoreStart
 				$this->error('Migration table could not be created.');
 
 				return $result;
+				// @codeCoverageIgnoreEnd
 			}
 		}
 
