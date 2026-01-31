@@ -1,10 +1,10 @@
 # Quma
 
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE.md)
-[![Coverage Status](https://img.shields.io/scrutinizer/coverage/g/duonrun/quma.svg)](https://scrutinizer-ci.com/g/duonrun/quma/code-structure)
-[![Psalm coverage](https://shepherd.dev/github/duonrun/quma/coverage.svg?)](https://shepherd.dev/github/duonrun/quma)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/274d61ae59344c48868d88da2acd6a5c)](https://app.codacy.com/gh/duonrun/quma/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/274d61ae59344c48868d88da2acd6a5c)](https://app.codacy.com/gh/duonrun/quma/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
 [![Psalm level](https://shepherd.dev/github/duonrun/quma/level.svg?)](https://duonrun.dev/quma)
-[![Quality Score](https://img.shields.io/scrutinizer/g/duonrun/quma.svg)](https://scrutinizer-ci.com/g/duonrun/quma)
+[![Psalm coverage](https://shepherd.dev/github/duonrun/quma/coverage.svg?)](https://shepherd.dev/github/duonrun/quma)
 
 This project is a PHP port of Python library [quma](https://quma.readthedocs.io).
 
