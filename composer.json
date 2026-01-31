@@ -35,6 +35,10 @@
 		"test": [
 			"./vendor/bin/phpunit --testdox --no-coverage --colors=always"
 		],
+		"test:sqlite": "QUMA_TEST_DRIVERS=sqlite ./vendor/bin/phpunit --testdox --no-coverage --colors=always",
+		"test:mysql": "QUMA_TEST_DRIVERS=mysql ./vendor/bin/phpunit --testdox --no-coverage --colors=always",
+		"test:pgsql": "QUMA_TEST_DRIVERS=pgsql ./vendor/bin/phpunit --testdox --no-coverage --colors=always",
+		"test:all": "QUMA_TEST_DRIVERS=sqlite,mysql,pgsql ./vendor/bin/phpunit --testdox --no-coverage --colors=always",
 		"check": "./vendor/bin/psalm --no-cache",
 		"mdlint": "markdownlint-cli2 README.md CHANGELOG.md LICENSE.md docs/",
 		"coverage": [

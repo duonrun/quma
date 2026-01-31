@@ -69,6 +69,16 @@ export QUMA_TEST_DRIVERS=sqlite,mysql,pgsql
 composer test
 ```
 
+## Running Tests
+
+```bash
+composer test
+composer test:sqlite
+composer test:mysql
+composer test:pgsql
+composer test:all
+```
+
 ## License
 
 This project is licensed under the [MIT license](LICENSE.md).
