@@ -84,6 +84,46 @@ class ConnectionTest extends TestCase
 		$this->assertStringEndsWith('/default', $sql[2]);
 	}
 
+	public function testNestedSqlDirsList(): void
+	{
+		$conn = new Connection(
+			$this->getDsn(),
+			[
+				[
+					TestCase::root() . 'sql/default',
+					TestCase::root() . 'sql/more',
+				],
+			],
+		);
+
+		$sql = $conn->sql();
+		$this->assertCount(2, $sql);
+		$this->assertStringEndsWith('/more', $sql[0]);
+		$this->assertStringEndsWith('/default', $sql[1]);
+	}
+
+	public function testDriverSpecificArrayDirs(): void
+	{
+		$conn = new Connection(
+			$this->getDsn(),
+			[
+				'sqlite' => [
+					TestCase::root() . 'sql/additional',
+					TestCase::root() . 'sql/default',
+				],
+				'all' => [
+					TestCase::root() . 'sql/more',
+				],
+			],
+		);
+
+		$sql = $conn->sql();
+		$this->assertCount(3, $sql);
+		$this->assertStringEndsWith('/additional', $sql[0]);
+		$this->assertStringEndsWith('/default', $sql[1]);
+		$this->assertStringEndsWith('/more', $sql[2]);
+	}
+
 	public function testMigrationDirectories(): void
 	{
 		$conn = new Connection(
@@ -114,6 +154,49 @@ class ConnectionTest extends TestCase
 		$this->assertStringEndsWith('/migrations', $migrations['default'][0]);
 		$this->assertStringEndsWith('/default', $migrations['default'][1]);
 		$this->assertStringEndsWith('/additional', $migrations['install']);
+	}
+
+	public function testNamespacedMigrationDirectoriesWithEmptyNamespace(): void
+	{
+		$conn = new Connection(
+			$this->getDsn(),
+			TestCase::root() . 'sql/default',
+			[
+				'' => TestCase::root() . 'migrations',
+				'valid' => [
+					[
+						'all' => TestCase::root() . 'sql/default',
+					],
+				],
+			],
+		);
+		$migrations = $conn->migrations();
+
+		$this->assertCount(1, $migrations);
+		$this->assertArrayHasKey('valid', $migrations);
+		$this->assertStringEndsWith('/default', $migrations['valid'][0]);
+	}
+
+	public function testNamespacedMigrationDirectoriesWithNestedList(): void
+	{
+		$conn = new Connection(
+			$this->getDsn(),
+			TestCase::root() . 'sql/default',
+			[
+				'valid' => [
+					[
+						TestCase::root() . 'migrations',
+						TestCase::root() . 'sql/default',
+					],
+				],
+			],
+		);
+		$migrations = $conn->migrations();
+
+		$this->assertCount(1, $migrations);
+		$this->assertArrayHasKey('valid', $migrations);
+		$this->assertStringEndsWith('/migrations', $migrations['valid'][0]);
+		$this->assertStringEndsWith('/default', $migrations['valid'][1]);
 	}
 
 	public function testAddMigrationDirectoriesLater(): void
