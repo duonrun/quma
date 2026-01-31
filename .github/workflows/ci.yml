@@ -9,6 +9,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
+      QUMA_TEST_DRIVERS: sqlite,mysql,pgsql
       QUMA_DB_MYSQL_HOST: localhost
       QUMA_DB_PGSQL_HOST: localhost
       QUMA_DB_NAME: quma_db

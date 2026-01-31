@@ -27,7 +27,7 @@ class TestCase extends BaseTestCase
 	protected static function getSqliteDbPath1(): string
 	{
 		if (self::$sqliteDbPath1 === null) {
-			self::$sqliteDbPath1 = getenv('QUMA_SQLITE_DB_PATH_1') ?: 'quma_db1.sqlite3';
+			self::$sqliteDbPath1 = getenv('QUMA_DB_SQLITE_DB_PATH_1') ?: 'quma_db1.sqlite3';
 		}
 
 		return self::$sqliteDbPath1;
@@ -36,10 +36,34 @@ class TestCase extends BaseTestCase
 	protected static function getSqliteDbPath2(): string
 	{
 		if (self::$sqliteDbPath2 === null) {
-			self::$sqliteDbPath2 = getenv('QUMA_SQLITE_DB_PATH_2') ?: 'quma_db2.sqlite3';
+			self::$sqliteDbPath2 = getenv('QUMA_DB_SQLITE_DB_PATH_2') ?: 'quma_db2.sqlite3';
 		}
 
 		return self::$sqliteDbPath2;
+	}
+
+	protected static function getTestDrivers(): array
+	{
+		$raw = getenv('QUMA_TEST_DRIVERS');
+
+		if ($raw === false || trim($raw) === '') {
+			return ['sqlite'];
+		}
+
+		$drivers = preg_split('/[\s,]+/', strtolower($raw), -1, PREG_SPLIT_NO_EMPTY);
+		$allowed = ['sqlite', 'pgsql', 'mysql'];
+		$result = [];
+
+		foreach ($drivers as $driver) {
+			if (!in_array($driver, $allowed, true)) {
+				continue;
+			}
+			if (!in_array($driver, $result, true)) {
+				$result[] = $driver;
+			}
+		}
+
+		return $result ?: ['sqlite'];
 	}
 
 	public static function root(): string
@@ -175,9 +199,18 @@ class TestCase extends BaseTestCase
 
 	public static function getAvailableDsns(bool $transactionsOnly = false): array
 	{
-		$dsns = [['transactions' => true, 'dsn' => 'sqlite:' . self::getDbFile()]];
+		$drivers = self::getTestDrivers();
+		$dsns = [];
+
+		if (in_array('sqlite', $drivers, true)) {
+			$dsns[] = ['transactions' => true, 'dsn' => 'sqlite:' . self::getDbFile()];
+		}
 
 		foreach (self::getServerDsns() as $dsn) {
+			$driver = strtok($dsn['dsn'], ':');
+			if (!in_array($driver, $drivers, true)) {
+				continue;
+			}
 			try {
 				new PDO($dsn['dsn']);
 				$dsns[] = $dsn;
@@ -200,8 +233,13 @@ class TestCase extends BaseTestCase
 	{
 		@unlink(self::getDbFile(self::getSqliteDbPath1()));
 		@unlink(self::getDbFile(self::getSqliteDbPath2()));
+		$drivers = self::getTestDrivers();
 
 		foreach (self::getServerDsns() as $dsn) {
+			$driver = strtok($dsn['dsn'], ':');
+			if (!in_array($driver, $drivers, true)) {
+				continue;
+			}
 			try {
 				$conn = new PDO($dsn['dsn']);
 				$conn->prepare('DROP TABLE IF EXISTS migrations')->execute();
