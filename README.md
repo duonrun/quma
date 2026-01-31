@@ -2,7 +2,7 @@
 
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE.md)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/274d61ae59344c48868d88da2acd6a5c)](https://app.codacy.com/gh/duonrun/quma/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/274d61ae59344c48868d88da2acd6a5c)](https://app.codacy.com/gh/duonrun/quma/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
+[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/274d61ae59344c48868d88da2acd6a5c?branch=main)](https://app.codacy.com/gh/duonrun/quma/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
 [![Psalm level](https://shepherd.dev/github/duonrun/quma/level.svg?)](https://duonrun.dev/quma)
 [![Psalm coverage](https://shepherd.dev/github/duonrun/quma/coverage.svg?)](https://shepherd.dev/github/duonrun/quma)
 
