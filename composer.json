@@ -32,21 +32,24 @@
 		"duon/dev": "^2.5"
 	},
 	"scripts": {
-		"test": [
-			"./vendor/bin/phpunit --testdox --no-coverage --colors=always"
-		],
-		"test:sqlite": "QUMA_TEST_DRIVERS=sqlite ./vendor/bin/phpunit --testdox --no-coverage --colors=always",
-		"test:mysql": "QUMA_TEST_DRIVERS=mysql ./vendor/bin/phpunit --testdox --no-coverage --colors=always",
-		"test:pgsql": "QUMA_TEST_DRIVERS=pgsql ./vendor/bin/phpunit --testdox --no-coverage --colors=always",
-		"test:all": "QUMA_TEST_DRIVERS=sqlite,mysql,pgsql ./vendor/bin/phpunit --testdox --no-coverage --colors=always",
-		"check": "./vendor/bin/psalm --no-cache",
-		"mdlint": "markdownlint-cli2 README.md CHANGELOG.md LICENSE.md docs/",
+		"test:base": "./vendor/bin/phpunit --testdox --no-coverage --colors=always",
+		"test:sqlite": "QUMA_TEST_DRIVERS=sqlite composer test:base",
+		"test:mysql": "QUMA_TEST_DRIVERS=mysql composer test:base",
+		"test:pgsql": "QUMA_TEST_DRIVERS=pgsql composer test:base",
+		"test:all": "QUMA_TEST_DRIVERS=sqlite,mysql,pgsql composer test:base",
+		"test": "composer test:base",
 		"coverage": [
 			"php -d xdebug.mode=coverage ./vendor/bin/phpunit --testdox --path-coverage --coverage-text --coverage-php=coverage/cover.php --colors=always",
 			"./vendor/bin/coverlyzer coverage/cover.php"
 		],
-		"ci": [
+		"coverage:all": [
 			"QUMA_TEST_DRIVERS=sqlite,mysql,pgsql composer coverage",
+			"./vendor/bin/coverlyzer coverage/cover.php"
+		],
+		"check": "./vendor/bin/psalm --no-cache",
+		"mdlint": "markdownlint-cli2 README.md CHANGELOG.md LICENSE.md docs/",
+		"ci": [
+			"composer coverage:all",
 			"composer check",
 			"composer mdlint"
 		],
