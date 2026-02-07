@@ -50,14 +50,12 @@ class Script
 
 	protected function evaluateTemplate(string $path, Args $args): string
 	{
-		$templateSource = $this->readFile($path);
-
-		if (!is_string($templateSource)) {
+		if (!is_file($path)) {
 			return '';
 		}
 
-		return $this->renderTemplateSource(
-			$templateSource,
+		return $this->renderTemplateFile(
+			$path,
 			$this->buildTemplateContext($args),
 		);
 	}
@@ -74,27 +72,23 @@ class Script
 	}
 
 	/**
+	 * @param string $templatePath
 	 * @param array<array-key, mixed> $context
 	 */
-	protected function renderTemplateSource(string $templateSource, array $context): string
+	protected function renderTemplateFile(string $templatePath, array $context): string
 	{
 		ob_start();
 
-		(static function (string $__templateSource, array $__context): void {
+		(static function (string $__templatePath, array $__context): void {
 			extract($__context, EXTR_SKIP);
-			eval('?>' . $__templateSource);
-		})($templateSource, $context);
+
+			/** @psalm-suppress UnresolvableInclude */
+			include $__templatePath;
+		})($templatePath, $context);
 
 		$result = ob_get_clean();
 
 		return is_string($result) ? $result : '';
-	}
-
-	protected function readFile(string $path): string|false
-	{
-		$contents = file_get_contents($path);
-
-		return is_string($contents) ? $contents : false;
 	}
 
 	/**
