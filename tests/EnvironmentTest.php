@@ -105,6 +105,31 @@ class EnvironmentTest extends TestCase
 		$this->removeMigrationDir($dir);
 	}
 
+	public function testGetMigrationsSkipsInvalidNamespaceDirectories(): void
+	{
+		$dir = $this->createMigrationDir('namespaced-invalid-dirs');
+		file_put_contents($dir . '/20240101-000000-a.sql', 'SELECT 1;');
+
+		$connection = $this->connection(migrations: [$dir]);
+		$property = new ReflectionProperty(Connection::class, 'migrations');
+		$property->setValue($connection, [
+			'valid' => [$dir],
+			'invalidType' => 123,
+			'emptyDirs' => [''],
+		]);
+
+		$_SERVER['argv'] = ['run'];
+		$env = new Environment(['default' => $connection], []);
+		$migrations = $env->getMigrations();
+
+		$this->assertIsArray($migrations);
+		$this->assertArrayHasKey('valid', $migrations);
+		$this->assertArrayNotHasKey('invalidType', $migrations);
+		$this->assertArrayNotHasKey('emptyDirs', $migrations);
+
+		$this->removeMigrationDir($dir);
+	}
+
 	public function testCheckIfMigrationsTableExistsForDrivers(): void
 	{
 		$_SERVER['argv'] = ['run'];
