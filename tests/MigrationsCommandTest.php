@@ -8,6 +8,7 @@ use Duon\Quma\Commands\Migrations;
 use Duon\Quma\Connection;
 use Duon\Quma\Database;
 use ReflectionMethod;
+use RuntimeException;
 
 /**
  * @internal
@@ -43,6 +44,65 @@ class MigrationsCommandTest extends TestCase
 
 		$this->assertSame(1, $result);
 		$this->assertStringContainsString('Could not read migration file', $output);
+	}
+
+	public function testMigrateTpqlHandlesMissingFile(): void
+	{
+		$_SERVER['argv'] = ['run'];
+		$conn = $this->connection();
+		$db = new Database($conn);
+		$command = new Migrations($conn);
+		$method = new ReflectionMethod(Migrations::class, 'migrateTPQL');
+
+		$missing = sys_get_temp_dir() . '/missing-migration-' . uniqid() . '.tpql';
+		if (is_file($missing)) {
+			unlink($missing);
+		}
+
+		ob_start();
+		$result = $method->invoke($command, $db, $conn, $missing, false);
+		$output = ob_get_contents();
+		ob_end_clean();
+
+		$this->assertSame('error', $result);
+		$this->assertStringContainsString('Could not read migration file', $output);
+	}
+
+	public function testLoadPhpMigrationThrowsWhenFileMissing(): void
+	{
+		$_SERVER['argv'] = ['run'];
+		$conn = $this->connection();
+		$command = new Migrations($conn);
+		$method = new ReflectionMethod(Migrations::class, 'loadPhpMigration');
+
+		$missing = sys_get_temp_dir() . '/missing-migration-' . uniqid() . '.php';
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Could not read migration file');
+
+		$method->invoke($command, $missing);
+	}
+
+	public function testLoadPhpMigrationThrowsWhenFileReturnsWrongObject(): void
+	{
+		$_SERVER['argv'] = ['run'];
+		$conn = $this->connection();
+		$command = new Migrations($conn);
+		$method = new ReflectionMethod(Migrations::class, 'loadPhpMigration');
+
+		$migration = sys_get_temp_dir() . '/invalid-migration-' . uniqid() . '.php';
+		file_put_contents($migration, '<?php return new stdClass();');
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Invalid migration file');
+
+		try {
+			$method->invoke($command, $migration);
+		} finally {
+			if (is_file($migration)) {
+				unlink($migration);
+			}
+		}
 	}
 
 	public function testFinishHandlesNonTransactionalDrivers(): void
