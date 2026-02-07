@@ -111,13 +111,20 @@ class Connection
 		$dirs = $this->readFlatDirs($migrations);
 
 		// Only merge if migrations is a flat list
-		if (array_is_list($this->migrations)) {
-			/** @psalm-var MigrationDirsFlat */
-			$this->migrations = array_merge($dirs, $this->migrations);
+		if (!array_is_list($this->migrations)) {
+			return;
 		}
+
+		$merged = $dirs;
+
+		foreach ($this->migrations as $existingDir) {
+			$merged[] = $existingDir;
+		}
+
+		$this->migrations = $merged;
 	}
 
-	/** @psalm-return MigrationDirs */
+	/** @psalm-return list<non-empty-string>|array<non-empty-string, non-empty-string|list<non-empty-string>> */
 	public function migrations(): array
 	{
 		return $this->migrations;
@@ -182,7 +189,6 @@ class Connection
 			return $this->readAssocDirs($config);
 		}
 
-		/** @psalm-var list<non-empty-string> */
 		$dirs = [];
 
 		foreach ($config as $entry) {
@@ -231,40 +237,63 @@ class Connection
 	{
 		$hasDriver = array_key_exists($this->driver, $entry);
 		$hasAll = array_key_exists('all', $entry);
-		/** @psalm-var list<non-empty-string> */
 		$dirs = [];
 
 		if ($hasDriver) {
-			/** @var mixed */
-			$driverEntry = $entry[$this->driver];
-
-			if (is_string($driverEntry)) {
-				$dirs[] = $this->preparePath($driverEntry);
-			} elseif (is_array($driverEntry)) {
-				/** @var mixed $path */
-				foreach ($driverEntry as $path) {
-					if (is_string($path)) {
-						$dirs[] = $this->preparePath($path);
-					}
-				}
-			}
+			$dirs = array_merge($dirs, $this->readDirsEntry($entry[$this->driver]));
 		}
 
 		if ($hasAll) {
-			/** @var mixed */
-			$allEntry = $entry['all'];
-
-			if (is_string($allEntry)) {
-				$dirs[] = $this->preparePath($allEntry);
-			} elseif (is_array($allEntry)) {
-				/** @var mixed $path */
-				foreach ($allEntry as $path) {
-					if (is_string($path)) {
-						$dirs[] = $this->preparePath($path);
-					}
-				}
-			}
+			$dirs = array_merge($dirs, $this->readDirsEntry($entry['all']));
 		}
+
+		return $dirs;
+	}
+
+	/**
+	 * @psalm-return list<non-empty-string>
+	 */
+	protected function readDirsEntry(mixed $entry): array
+	{
+		if (is_string($entry)) {
+			return [$this->preparePath($entry)];
+		}
+
+		if (!is_array($entry)) {
+			return [];
+		}
+
+		$dirs = [];
+
+		array_walk(
+			$entry,
+			function (mixed $value) use (&$dirs): void {
+				if (is_string($value)) {
+					$dirs[] = $this->preparePath($value);
+
+					return;
+				}
+
+				if (!is_array($value)) {
+					return;
+				}
+
+				if (Util::isAssoc($value)) {
+					$dirs = array_merge($dirs, $this->readAssocDirs($value));
+
+					return;
+				}
+
+				array_walk(
+					$value,
+					function (mixed $path) use (&$dirs): void {
+						if (is_string($path)) {
+							$dirs[] = $this->preparePath($path);
+						}
+					},
+				);
+			},
+		);
 
 		return $dirs;
 	}
@@ -318,22 +347,28 @@ class Connection
 	 */
 	protected function readNamespacedDirs(array $config): array
 	{
-		/** @psalm-var MigrationDirsNamespaced */
 		$result = [];
 
-		/** @var mixed $dirs */
-		foreach ($config as $namespace => $dirs) {
-			if (!is_string($namespace) || $namespace === '') {
-				continue;
-			}
+		array_walk(
+			$config,
+			function (mixed $dirs, int|string $namespace) use (&$result): void {
+				if (!is_string($namespace) || $namespace === '') {
+					return;
+				}
 
-			if (is_string($dirs)) {
-				$result[$namespace] = $this->preparePath($dirs);
-			} elseif (is_array($dirs)) {
-				/** @psalm-suppress MixedArgumentTypeCoercion */
-				$result[$namespace] = $this->readFlatDirs($dirs, preserveOrder: true);
-			}
-		}
+				if (is_string($dirs)) {
+					$result[$namespace] = $this->preparePath($dirs);
+
+					return;
+				}
+
+				if (!is_array($dirs)) {
+					return;
+				}
+
+				$result[$namespace] = $this->readDirsEntry($dirs);
+			},
+		);
 
 		return $result;
 	}

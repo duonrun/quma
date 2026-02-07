@@ -102,15 +102,20 @@ class Script
 		);
 
 		if ($matches !== false && $matches > 0) {
-			$argsArray = $args->get();
+			$argsArray = $args->getNamed();
+			$namedKeys = [];
 			$newArgs = [];
 
 			foreach (array_unique($result[0]) as $arg) {
 				$a = substr($arg, 2);
-				assert(!empty($a));
 
-				/** @psalm-var array<non-empty-string, mixed> */
-				$newArgs[$a] = $argsArray[$a];
+				if ($a !== '') {
+					$namedKeys[$a] = true;
+				}
+			}
+
+			if (count($namedKeys) > 0) {
+				$newArgs = array_intersect_key($argsArray, $namedKeys);
 			}
 		}
 

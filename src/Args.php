@@ -28,6 +28,18 @@ final class Args
 		return $this->args;
 	}
 
+	/**
+	 * @return array<array-key, mixed>
+	 */
+	public function getNamed(): array
+	{
+		if ($this->type !== ArgType::Named || !Util::isAssoc($this->args)) {
+			return [];
+		}
+
+		return $this->args;
+	}
+
 	public function count(): int
 	{
 		return $this->count;
