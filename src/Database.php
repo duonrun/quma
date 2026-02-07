@@ -13,8 +13,7 @@ class Database
 {
 	use GetsSetsPrint;
 
-	/** @psalm-suppress PropertyNotSetInConstructor */
-	protected readonly PDO $pdo;
+	protected ?PDO $pdo = null;
 
 	public function __construct(protected readonly Connection $conn)
 	{
@@ -58,15 +57,13 @@ class Database
 
 	public function connect(): static
 	{
-		/** @psalm-suppress RedundantPropertyInitializationCheck */
-		if (isset($this->pdo)) {
+		if ($this->pdo !== null) {
 			return $this;
 		}
 
 		$conn = $this->conn;
 
-		/** @psalm-suppress InaccessibleProperty */
-		$this->pdo = new PDO(
+		$pdo = new PDO(
 			$conn->dsn,
 			$conn->username,
 			$conn->password,
@@ -74,46 +71,53 @@ class Database
 		);
 
 		// Always throw an exception when an error occures
-		$this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		// Allow getting the number of rows
-		$this->pdo->setAttribute(PDO::ATTR_CURSOR, PDO::CURSOR_SCROLL);
+		$pdo->setAttribute(PDO::ATTR_CURSOR, PDO::CURSOR_SCROLL);
 		// deactivate native prepared statements by default
-		$this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
+		$pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
 		// do not alter casing of the columns from sql
-		$this->pdo->setAttribute(PDO::ATTR_CASE, PDO::CASE_NATURAL);
+		$pdo->setAttribute(PDO::ATTR_CASE, PDO::CASE_NATURAL);
+
+		$this->pdo = $pdo;
 
 		return $this;
 	}
 
 	public function quote(string $value): string
 	{
-		$this->connect();
-
-		return $this->pdo->quote($value);
+		return $this->requirePdo()->quote($value);
 	}
 
 	public function begin(): bool
 	{
-		$this->connect();
-
-		return $this->pdo->beginTransaction();
+		return $this->requirePdo()->beginTransaction();
 	}
 
 	public function commit(): bool
 	{
-		return $this->pdo->commit();
+		return $this->requirePdo()->commit();
 	}
 
 	public function rollback(): bool
 	{
-		return $this->pdo->rollback();
+		return $this->requirePdo()->rollback();
 	}
 
 	public function getConn(): PDO
 	{
+		return $this->requirePdo();
+	}
+
+	protected function requirePdo(): PDO
+	{
 		$this->connect();
 
-		return $this->pdo;
+		if ($this->pdo !== null) {
+			return $this->pdo;
+		}
+
+		throw new RuntimeException('Database connection not initialized');
 	}
 
 	public function execute(string $query, mixed ...$args): Query

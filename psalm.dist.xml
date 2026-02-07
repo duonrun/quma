@@ -15,4 +15,12 @@
     <projectFiles>
         <directory name="src" />
     </projectFiles>
+
+	<issueHandlers>
+		<PossiblyUnusedParam>
+			<errorLevel type="suppress">
+				<file name="src/Script.php" />
+			</errorLevel>
+		</PossiblyUnusedParam>
+	</issueHandlers>
 </psalm>

@@ -9,6 +9,7 @@ use Duon\Cli\Opts;
 use Duon\Quma\Connection;
 use Duon\Quma\Database;
 use Duon\Quma\Environment;
+use Duon\Quma\MigrationInterface;
 use Override;
 use PDOException;
 use RuntimeException;
@@ -298,39 +299,31 @@ final class Migrations extends Command
 		bool $showStacktrace,
 	): string {
 		try {
-			$load = function (string $migrationPath, array $context = []): void {
-				// Hide $migrationPath. Could be overwritten if $context['templatePath'] exists.
-				$____migration_path____ = $migrationPath;
-
-				extract($context);
-
-				/** @psalm-suppress UnresolvableInclude */
-				include $____migration_path____;
+			$template = $this->readMigrationFile($migration);
+			$executeTemplate = static function (
+				string $script,
+				string $driver,
+				Database $db,
+				Connection $conn,
+			): void {
+				eval('?>' . $script);
 			};
 
-			$error = null;
-			$context = [
-				'driver' => $db->getPdoDriver(),
-				'db' => $db,
-				'conn' => $conn,
-			];
+			if ($template === false) {
+				throw new RuntimeException('Could not read migration file');
+			}
 
 			ob_start();
+			$script = '';
 
 			try {
-				$load($migration, $context);
-			} catch (Throwable $e) {
-				$error = $e;
+				$executeTemplate($template, $db->getPdoDriver(), $db, $conn);
+				$script = ob_get_contents();
+			} finally {
+				ob_end_clean();
 			}
 
-			$script = ob_get_contents();
-			ob_end_clean();
-
-			if ($error !== null) {
-				throw $error;
-			}
-
-			if ($script === false || trim($script) === '') {
+			if (!is_string($script) || trim($script) === '') {
 				$this->showEmptyMessage($migration);
 
 				return self::WARNING;
@@ -344,14 +337,13 @@ final class Migrations extends Command
 		}
 	}
 
-	/** @psalm-suppress UnresolvableInclude, MixedAssignment, MixedMethodCall */
 	protected function migratePHP(
 		Database $db,
 		string $migration,
 		bool $showStacktrace,
 	): string {
 		try {
-			$migObj = require $migration;
+			$migObj = $this->loadPhpMigration($migration);
 			$migObj->run($this->env);
 			$this->logMigration($db, $migration);
 			$this->showMessage($migration);
@@ -362,6 +354,37 @@ final class Migrations extends Command
 
 			return self::ERROR;
 		}
+	}
+
+	protected function loadPhpMigration(string $migration): MigrationInterface
+	{
+		if (!is_file($migration)) {
+			throw new RuntimeException('Could not read migration file');
+		}
+
+		$script = $this->readMigrationFile($migration);
+		$executeMigration = static function (string $content): mixed {
+			return eval('?>' . $content);
+		};
+
+		if ($script === false) {
+			throw new RuntimeException('Could not read migration file');
+		}
+
+		$migrationObject = $executeMigration($script);
+
+		if (!$migrationObject instanceof MigrationInterface) {
+			throw new RuntimeException('Invalid migration file. Expected MigrationInterface instance');
+		}
+
+		return $migrationObject;
+	}
+
+	protected function readMigrationFile(string $path): string|false
+	{
+		$contents = file_get_contents($path);
+
+		return is_string($contents) ? $contents : false;
 	}
 
 	protected function logMigration(Database $db, string $migration): void

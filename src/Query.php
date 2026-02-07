@@ -84,13 +84,7 @@ class Query
 		$this->stmt->execute();
 		$fetchMode = $fetchMode ?? $this->db->getFetchMode();
 
-		/**
-		 * @psalm-suppress MixedAssignment
-		 *
-		 * As the fetch mode can be changed it is not clear
-		 * which type will be returned from `fetch`
-		 */
-		while ($record = $this->stmt->fetch($fetchMode)) {
+		while (($record = $this->fetchArrayRecord($fetchMode)) !== null) {
 			yield $record;
 		}
 	}
@@ -124,8 +118,7 @@ class Query
 		$argsArray = $this->args->get();
 
 		if ($this->args->type() === ArgType::Named) {
-			/** @psalm-suppress InvalidArgument */
-			$interpolated = $this->interpolateNamed($prep->query, $argsArray);
+			$interpolated = $this->interpolateNamed($prep->query, $this->args->getNamed());
 		} else {
 			$interpolated = $this->interpolatePositional($prep->query, $argsArray);
 		}
@@ -135,46 +128,58 @@ class Query
 
 	protected function bindArgs(array $args, ArgType $argType): void
 	{
-		/** @psalm-suppress MixedAssignment -- $value is thouroughly typechecked in the loop */
-		foreach ($args as $a => $value) {
-			if ($argType === ArgType::Named) {
-				$arg = ':' . $a;
-			} else {
-				$arg = (int) $a + 1; // question mark placeholders ar 1-indexed
-			}
+		array_walk(
+			$args,
+			function (mixed $value, int|string $index) use ($argType): void {
+				if ($argType === ArgType::Named) {
+					$arg = ':' . $index;
+				} else {
+					$arg = (int) $index + 1; // question mark placeholders are 1-indexed
+				}
 
-			switch (gettype($value)) {
-				case 'boolean':
-					$this->stmt->bindValue($arg, $value, PDO::PARAM_BOOL);
+				$this->bindValue($arg, $value);
+			},
+		);
+	}
 
-					break;
+	protected function bindValue(string|int $arg, mixed $value): void
+	{
+		switch (gettype($value)) {
+			case 'boolean':
+				$this->stmt->bindValue($arg, $value, PDO::PARAM_BOOL);
 
-				case 'integer':
-					$this->stmt->bindValue($arg, $value, PDO::PARAM_INT);
+				break;
 
-					break;
+			case 'integer':
+				$this->stmt->bindValue($arg, $value, PDO::PARAM_INT);
 
-				case 'string':
-					$this->stmt->bindValue($arg, $value, PDO::PARAM_STR);
+				break;
 
-					break;
+			case 'string':
+				$this->stmt->bindValue($arg, $value, PDO::PARAM_STR);
 
-				case 'NULL':
-					$this->stmt->bindValue($arg, $value, PDO::PARAM_NULL);
+				break;
 
-					break;
+			case 'NULL':
+				$this->stmt->bindValue($arg, $value, PDO::PARAM_NULL);
 
-				case 'array':
-					$this->stmt->bindValue($arg, json_encode($value), PDO::PARAM_STR);
+				break;
 
-					break;
+			case 'array':
+				$this->stmt->bindValue($arg, json_encode($value), PDO::PARAM_STR);
 
-				default:
-					throw new InvalidArgumentException(
-						'Only the types bool, int, string, null and array are supported',
-					);
-			}
+				break;
+
+			default:
+				throw new InvalidArgumentException(
+					'Only the types bool, int, string, null and array are supported',
+				);
 		}
+	}
+
+	protected function fetchArrayRecord(int $fetchMode): ?array
+	{
+		return $this->nullIfNot($this->stmt->fetch($fetchMode));
 	}
 
 	protected function nullIfNot(mixed $value): ?array
@@ -255,16 +260,19 @@ class Query
 		return $query;
 	}
 
-	/** @psalm-param array<non-empty-string, mixed> $args */
+	/** @psalm-param array<array-key, mixed> $args */
 	protected function interpolateNamed(string $query, array $args): string
 	{
 		$map = [];
 
-		/** @psalm-suppress MixedAssignment -- $value is checked in convertValue */
-		foreach ($args as $key => $value) {
-			$key = ':' . $key;
-			$map[$key] = $this->convertValue($value);
-		}
+		array_walk(
+			$args,
+			function (mixed $value, int|string $key) use (&$map): void {
+				if (is_string($key) && $key !== '') {
+					$map[':' . $key] = $this->convertValue($value);
+				}
+			},
+		);
 
 		return strtr($query, $map);
 	}
@@ -272,11 +280,14 @@ class Query
 	protected function interpolatePositional(string $query, array $args): string
 	{
 		$result = $query;
-		/** @psalm-suppress MixedAssignment -- $value is checked in convertValue */
-		foreach ($args as $value) {
-			$replaced = preg_replace('/\\?/', $this->convertValue($value), $result, 1);
-			$result = $replaced ?? $result;
-		}
+
+		array_walk(
+			$args,
+			function (mixed $value) use (&$result): void {
+				$replaced = preg_replace('/\\?/', $this->convertValue($value), $result, 1);
+				$result = $replaced ?? $result;
+			},
+		);
 
 		return $result;
 	}

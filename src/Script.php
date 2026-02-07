@@ -48,28 +48,36 @@ class Script
 		return new Query($this->db, $script, $args);
 	}
 
-	/** @psalm-suppress PossiblyUnusedParam - $path and $args are used but psalm complains anyway */
 	protected function evaluateTemplate(string $path, Args $args): string
 	{
-		// Hide $path. Could be overwritten if 'path' exists in $args.
-		$____template_path____ = $path;
-		unset($path);
+		$templateSource = $this->readFile($path);
 
-		extract(array_merge(
+		if (!is_string($templateSource)) {
+			return '';
+		}
+
+		$templateContext = array_merge(
 			// Add the pdo driver to args to allow dynamic
 			// queries based on the platform.
 			['pdodriver' => $this->db->getPdoDriver()],
 			$args->get(),
-		));
+		);
+
+		extract($templateContext);
 
 		ob_start();
-
-		/** @psalm-suppress UnresolvableInclude */
-		include $____template_path____;
+		eval('?>' . (string) $templateSource);
 
 		$result = ob_get_clean();
 
 		return $result !== false ? $result : '';
+	}
+
+	protected function readFile(string $path): string|false
+	{
+		$contents = file_get_contents($path);
+
+		return is_string($contents) ? $contents : false;
 	}
 
 	/**
