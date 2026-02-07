@@ -83,7 +83,7 @@ class Script
 			extract($__context, EXTR_SKIP);
 
 			/** @psalm-suppress UnresolvableInclude */
-			include $__templatePath;
+			require $__templatePath;
 		})($templatePath, $context);
 
 		$result = ob_get_clean();
