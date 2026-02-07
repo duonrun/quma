@@ -9,9 +9,9 @@ use InvalidArgumentException;
 /** @psalm-api */
 class Script
 {
-	protected $db;
-	protected $script;
-	protected $isTemplate;
+	protected Database $db;
+	protected string $script;
+	protected bool $isTemplate;
 
 	public function __construct(Database $db, string $script, bool $isTemplate)
 	{
