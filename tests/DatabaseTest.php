@@ -31,6 +31,21 @@ class DatabaseTest extends TestCase
 		$this->assertInstanceOf(PDO::class, $db->getConn());
 	}
 
+	public function testGetConnThrowsWhenConnectionWasNotInitialized(): void
+	{
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Database connection not initialized');
+
+		$db = new class ($this->connection()) extends Database {
+			public function connect(): static
+			{
+				return $this;
+			}
+		};
+
+		$db->getConn();
+	}
+
 	public function testSetWhetherItShouldPrintSqlToStdout(): void
 	{
 		$db = $this->getDb();
