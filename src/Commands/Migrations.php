@@ -312,7 +312,7 @@ final class Migrations extends Command
 				extract($context, EXTR_SKIP);
 
 				/** @psalm-suppress UnresolvableInclude */
-				include $migrationPath;
+				require $migrationPath;
 			};
 
 			if (!is_file($migration)) {
