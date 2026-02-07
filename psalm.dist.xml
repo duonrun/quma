@@ -12,15 +12,7 @@
     xmlns="https://getpsalm.org/schema/config"
     xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
 >
-    <projectFiles>
-        <directory name="src" />
-    </projectFiles>
-
-	<issueHandlers>
-		<PossiblyUnusedParam>
-			<errorLevel type="suppress">
-				<file name="src/Script.php" />
-			</errorLevel>
-		</PossiblyUnusedParam>
-	</issueHandlers>
+	<projectFiles>
+		<directory name="src" />
+	</projectFiles>
 </psalm>

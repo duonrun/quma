@@ -56,21 +56,38 @@ class Script
 			return '';
 		}
 
-		$templateContext = array_merge(
-			// Add the pdo driver to args to allow dynamic
-			// queries based on the platform.
-			['pdodriver' => $this->db->getPdoDriver()],
-			$args->get(),
+		return $this->renderTemplateSource(
+			$templateSource,
+			$this->buildTemplateContext($args),
 		);
+	}
 
-		extract($templateContext);
+	/**
+	 * @return array<array-key, mixed>
+	 */
+	protected function buildTemplateContext(Args $args): array
+	{
+		return array_merge(
+			['pdodriver' => $this->db->getPdoDriver()],
+			$args->getNamed(),
+		);
+	}
 
+	/**
+	 * @param array<array-key, mixed> $context
+	 */
+	protected function renderTemplateSource(string $templateSource, array $context): string
+	{
 		ob_start();
-		eval('?>' . (string) $templateSource);
+
+		(static function (string $__templateSource, array $__context): void {
+			extract($__context, EXTR_SKIP);
+			eval('?>' . $__templateSource);
+		})($templateSource, $context);
 
 		$result = ob_get_clean();
 
-		return $result !== false ? $result : '';
+		return is_string($result) ? $result : '';
 	}
 
 	protected function readFile(string $path): string|false
