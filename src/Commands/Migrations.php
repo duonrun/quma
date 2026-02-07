@@ -299,17 +299,23 @@ final class Migrations extends Command
 		bool $showStacktrace,
 	): string {
 		try {
-			$template = $this->readMigrationFile($migration);
+			$context = [
+				'driver' => $db->getPdoDriver(),
+				'db' => $db,
+				'conn' => $conn,
+			];
+
 			$executeTemplate = static function (
-				string $script,
-				string $driver,
-				Database $db,
-				Connection $conn,
+				string $migrationPath,
+				array $context,
 			): void {
-				eval('?>' . $script);
+				extract($context, EXTR_SKIP);
+
+				/** @psalm-suppress UnresolvableInclude */
+				include $migrationPath;
 			};
 
-			if ($template === false) {
+			if (!is_file($migration)) {
 				throw new RuntimeException('Could not read migration file');
 			}
 
@@ -317,7 +323,7 @@ final class Migrations extends Command
 			$script = '';
 
 			try {
-				$executeTemplate($template, $db->getPdoDriver(), $db, $conn);
+				$executeTemplate($migration, $context);
 				$script = ob_get_contents();
 			} finally {
 				ob_end_clean();
@@ -362,29 +368,13 @@ final class Migrations extends Command
 			throw new RuntimeException('Could not read migration file');
 		}
 
-		$script = $this->readMigrationFile($migration);
-		$executeMigration = static function (string $content): mixed {
-			return eval('?>' . $content);
-		};
-
-		if ($script === false) {
-			throw new RuntimeException('Could not read migration file');
-		}
-
-		$migrationObject = $executeMigration($script);
+		$migrationObject = require $migration;
 
 		if (!$migrationObject instanceof MigrationInterface) {
 			throw new RuntimeException('Invalid migration file. Expected MigrationInterface instance');
 		}
 
 		return $migrationObject;
-	}
-
-	protected function readMigrationFile(string $path): string|false
-	{
-		$contents = file_get_contents($path);
-
-		return is_string($contents) ? $contents : false;
 	}
 
 	protected function logMigration(Database $db, string $migration): void
