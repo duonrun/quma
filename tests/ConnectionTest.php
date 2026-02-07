@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Duon\Quma\Tests;
 
 use Duon\Quma\Connection;
+use ReflectionMethod;
 use RuntimeException;
 use ValueError;
 
@@ -212,6 +213,74 @@ class ConnectionTest extends TestCase
 		$this->assertCount(2, $migrations);
 		$this->assertStringEndsWith('/additional', $migrations[0]);
 		$this->assertStringEndsWith('/migrations', $migrations[1]);
+	}
+
+	public function testAddMigrationDirDoesNothingForNamespacedMigrations(): void
+	{
+		$conn = new Connection(
+			$this->getDsn(),
+			TestCase::root() . 'sql/default',
+			[
+				'default' => [TestCase::root() . 'migrations'],
+			],
+		);
+
+		$migrationsBefore = $conn->migrations();
+		$conn->addMigrationDir(TestCase::root() . 'sql/additional');
+
+		$this->assertSame($migrationsBefore, $conn->migrations());
+	}
+
+	public function testReadFlatDirsReturnsEmptyArrayForEmptyConfig(): void
+	{
+		$conn = new Connection($this->getDsn(), TestCase::root() . 'sql/default');
+		$method = new ReflectionMethod(Connection::class, 'readFlatDirs');
+
+		$this->assertSame([], $method->invoke($conn, [], false));
+	}
+
+	public function testReadFlatDirsCanPreserveConfiguredOrder(): void
+	{
+		$conn = new Connection($this->getDsn(), TestCase::root() . 'sql/default');
+		$method = new ReflectionMethod(Connection::class, 'readFlatDirs');
+
+		$dirs = $method->invoke(
+			$conn,
+			[
+				TestCase::root() . 'sql/default',
+				[TestCase::root() . 'sql/more'],
+				['sqlite' => TestCase::root() . 'sql/additional'],
+			],
+			true,
+		);
+
+		$this->assertCount(3, $dirs);
+		$this->assertStringEndsWith('/default', $dirs[0]);
+		$this->assertStringEndsWith('/more', $dirs[1]);
+		$this->assertStringEndsWith('/additional', $dirs[2]);
+	}
+
+	public function testReadDirsEntrySkipsUnsupportedValues(): void
+	{
+		$conn = new Connection($this->getDsn(), TestCase::root() . 'sql/default');
+		$method = new ReflectionMethod(Connection::class, 'readDirsEntry');
+
+		$this->assertSame([], $method->invoke($conn, 123));
+		$this->assertSame([], $method->invoke($conn, [123]));
+	}
+
+	public function testReadNamespacedDirsSkipsInvalidNamespaceDirectoryValue(): void
+	{
+		$conn = new Connection($this->getDsn(), TestCase::root() . 'sql/default');
+		$method = new ReflectionMethod(Connection::class, 'readNamespacedDirs');
+
+		$namespacedDirs = $method->invoke($conn, [
+			'valid' => TestCase::root() . 'migrations',
+			'invalid' => 123,
+		]);
+
+		$this->assertArrayHasKey('valid', $namespacedDirs);
+		$this->assertArrayNotHasKey('invalid', $namespacedDirs);
 	}
 
 	public function testUnsupportedDsn(): void
