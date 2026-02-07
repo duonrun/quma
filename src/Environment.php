@@ -54,7 +54,6 @@ class Environment
 	 */
 	public function getMigrations(): array|false
 	{
-		/** @var array<string, list<string>> */
 		$migrations = [];
 		$migrationDirs = $this->conn->migrations();
 
@@ -67,26 +66,59 @@ class Environment
 		// Check if migrations is a flat list or namespaced
 		if (array_is_list($migrationDirs)) {
 			// Flat list: wrap in 'default' namespace
-			/** @var list<non-empty-string> $migrationDirs */
-			$migrations['default'] = $this->collectMigrations($migrationDirs);
+			$dirs = $this->normalizeMigrationDirs($migrationDirs);
+
+			if (count($dirs) > 0) {
+				$migrations['default'] = $this->collectMigrations($dirs);
+			}
 		} else {
 			// Namespaced: process each namespace
-			/** @var mixed $dirs */
-			foreach ($migrationDirs as $namespace => $dirs) {
-				if (!is_string($namespace)) {
-					continue;
-				}
+			array_walk(
+				$migrationDirs,
+				function (mixed $dirs, int|string $namespace) use (&$migrations): void {
+					if (!is_string($namespace)) {
+						return;
+					}
 
-				if (is_string($dirs) && $dirs !== '') {
-					$migrations[$namespace] = $this->collectMigrations([$dirs]);
-				} elseif (is_array($dirs)) {
-					/** @var list<non-empty-string> $dirs */
-					$migrations[$namespace] = $this->collectMigrations($dirs);
-				}
-			}
+					if (is_string($dirs)) {
+						$resolvedDirs = $this->normalizeMigrationDirs([$dirs]);
+					} elseif (is_array($dirs)) {
+						$resolvedDirs = $this->normalizeMigrationDirs($dirs);
+					} else {
+						return;
+					}
+
+					if (count($resolvedDirs) === 0) {
+						return;
+					}
+
+					$migrations[$namespace] = $this->collectMigrations($resolvedDirs);
+				},
+			);
 		}
 
 		return $migrations;
+	}
+
+	/**
+	 * @param array<array-key, mixed> $dirs
+	 *
+	 * @return list<non-empty-string>
+	 */
+	protected function normalizeMigrationDirs(array $dirs): array
+	{
+		$normalized = [];
+
+		array_walk(
+			$dirs,
+			static function (mixed $path) use (&$normalized): void {
+				if (is_string($path) && $path !== '') {
+					$normalized[] = $path;
+				}
+			},
+		);
+
+		return $normalized;
 	}
 
 	/**

@@ -218,7 +218,6 @@ class Query
 			self::PATTERN_COMMENT_SINGLE,
 		];
 
-		/** @psalm-var array<non-empty-string, non-empty-string> */
 		$swaps = [];
 
 		$i = 0;
